@@ -1,0 +1,22 @@
+{
+  "app": {
+    "tagline": "Manage your projects. Know what to do now."
+  },
+  "system": {
+    "checking": "Checking the service…",
+    "ok": "API connected · v{{version}}",
+    "down": "API unavailable"
+  },
+  "errors": {
+    "default": "An unexpected error occurred.",
+    "NETWORK_ERROR": "Cannot reach the server. Check your connection.",
+    "UNEXPECTED_RESPONSE": "The server sent an unexpected response.",
+    "SERVICE_UNAVAILABLE": "The service is unavailable right now. Please try again in a few minutes.",
+    "INTERNAL_ERROR": "Something went wrong on the server.",
+    "INVALID_REQUEST": "The submitted data is not valid.",
+    "UNAUTHENTICATED": "You need to sign in.",
+    "FORBIDDEN": "You do not have permission to do this.",
+    "ROUTE_NOT_FOUND": "The requested resource does not exist."
+  },
+  "traceId": "Trace code: {{traceId}}"
+}

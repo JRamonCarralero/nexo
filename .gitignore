@@ -1,0 +1,27 @@
+# Documentación de planificación e ideas (de momento, fuera del repositorio)
+docs/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Backend
+backend/bin/
+*.test
+coverage.out
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo

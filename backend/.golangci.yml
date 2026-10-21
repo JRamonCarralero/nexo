@@ -1,0 +1,61 @@
+version: "2"
+
+linters:
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - gocritic
+    - misspell
+    - noctx
+    - revive
+    - unconvert
+  settings:
+    depguard:
+      rules:
+        # Third-party technologies stay inside their adapter (D-008).
+        # Module boundaries between our own packages are enforced by arch_test.go.
+        pgx:
+          files:
+            - "$all"
+            - "!**/internal/platform/database/**"
+            - "!**/store_postgres.go"
+            - "!**/internal/app/**"
+            - "!**/sqlc/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "pgx only in platform/database, store_postgres.go files and sqlc code"
+        firebase:
+          files:
+            - "$all"
+            - "!**/internal/platform/auth/firebase/**"
+            - "!**/internal/platform/realtime/firestore/**"
+            - "!**/internal/app/**"
+            - "!**/cmd/**"
+          deny:
+            - pkg: firebase.google.com/go
+              desc: "Firebase SDK only inside its adapters"
+            - pkg: cloud.google.com/go/firestore
+              desc: "Firestore SDK only inside its adapter"
+        gin:
+          files:
+            - "$all"
+            - "!**/internal/httpserver/**"
+            - "!**/cmd/**"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: "Gin only in the HTTP layer; handlers use context.Context"
+  exclusions:
+    generated: strict
+    presets:
+      - comments
+      - std-error-handling
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/JRamonCarralero/nexo
