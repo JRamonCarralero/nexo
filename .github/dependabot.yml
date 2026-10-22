@@ -16,6 +16,10 @@ updates:
       frontend-dependencies:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      # @types/node must follow the Node major in .nvmrc, not the latest Node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /

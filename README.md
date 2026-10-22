@@ -36,7 +36,7 @@ frontend/     React web app
 
 ## Getting started
 
-Requirements: Go 1.26+, Node 22.12+, pnpm 10, Docker and `make`.
+Requirements: Go 1.26+, Node 24.15+ (see `.nvmrc`), pnpm 10, Docker and `make`.
 
 ```bash
 make setup      # dependencies, tools and git hooks; creates backend/.env
