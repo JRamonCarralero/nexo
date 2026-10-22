@@ -1,55 +1,57 @@
 # Nexo
 
-> *Nexo*: del latín *nexus*, **unión, vínculo**. El punto donde se conectan las personas, los proyectos y los agentes de IA que trabajan con ellos.
+**English** · [Español](README.es.md)
 
-Nexo es un gestor de proyectos para todo el mundo: muy simple de usar sin configurar nada, y ampliamente personalizable cuando el trabajo lo requiere. Rápido, centrado en el teclado y diseñado desde el principio para trabajar codo con codo con agentes de IA.
+> *Nexo*: from the Latin *nexus*, **bond, connection**. The point where people, projects and the AI agents working with them come together.
 
-**Estado:** 🌱 en desarrollo temprano (esqueleto del proyecto). Todavía no es usable.
+Nexo is a project manager for everyone: very simple to use without configuring anything, and highly customizable when the work calls for it. Fast, keyboard-first and designed from day one to work hand in hand with AI agents.
+
+**Status:** 🌱 early development (project skeleton). Not usable yet.
 
 ## Stack
 
-| Parte | Tecnología |
+| Part | Technology |
 |---|---|
-| Contrato de la API | OpenAPI 3 ([`api/openapi.yaml`](api/openapi.yaml)), fuente de verdad del servidor y del cliente |
+| API contract | OpenAPI 3 ([`api/openapi.yaml`](api/openapi.yaml)), the source of truth for server and client |
 | Backend | Go · Gin · oapi-codegen · PostgreSQL (pgx, sqlc, goose) |
-| Frontend | React · Vite · TypeScript · TanStack Router y Query · Tailwind · i18next · orval |
-| Infraestructura | Docker Compose en local · GCP (Cloud Run) previsto |
+| Frontend | React · Vite · TypeScript · TanStack Router & Query · Tailwind · i18next · orval |
+| Infrastructure | Docker Compose locally · GCP (Cloud Run) planned |
 
-## Estructura
+## Structure
 
 ```
-api/          Contrato OpenAPI
-backend/      API en Go (monolito modular)
-  cmd/api/              arranque del servidor
-  internal/app/         composición de dependencias
-  internal/httpserver/  router, middlewares y código generado
-  internal/modules/     módulos de negocio
-  internal/platform/    infraestructura: errores, logs, config, base de datos…
-  db/migrations/        migraciones SQL
-frontend/     Aplicación web en React
-  src/app/              arranque, router y rutas
-  src/features/         funcionalidades
-  src/shared/           cliente de la API, adaptadores, UI común
+api/          OpenAPI contract
+backend/      Go API (modular monolith)
+  cmd/api/              server entry point
+  internal/app/         dependency wiring
+  internal/httpserver/  router, middlewares and generated code
+  internal/modules/     business modules
+  internal/platform/    infrastructure: errors, logging, config, database…
+  db/migrations/        SQL migrations
+frontend/     React web app
+  src/app/              bootstrap, router and routes
+  src/features/         features
+  src/shared/           API client, adapters, shared UI
 ```
 
-## Puesta en marcha
+## Getting started
 
-Requisitos: Go 1.26+, Node 22.12+, pnpm 10, Docker y `make`.
+Requirements: Go 1.26+, Node 22.12+, pnpm 10, Docker and `make`.
 
 ```bash
-make setup      # dependencias, herramientas y git hooks; crea backend/.env
-make up         # Postgres en Docker (puerto 5433, para convivir con un Postgres local en 5432)
-make db-migrate # aplica las migraciones
-make dev-api    # API en http://localhost:8080
-make dev-web    # web en http://localhost:5173 (en otra terminal)
+make setup      # dependencies, tools and git hooks; creates backend/.env
+make up         # Postgres in Docker (port 5433, to coexist with a local Postgres on 5432)
+make db-migrate # applies the migrations
+make dev-api    # API at http://localhost:8080
+make dev-web    # web at http://localhost:5173 (in another terminal)
 ```
 
-`make help` lista todos los comandos.
+`make help` lists every command.
 
-## Contribuir
+## Contributing
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Las contribuciones requieren aceptar el acuerdo de contribución (CLA).
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Contributions require accepting the Contributor License Agreement (CLA).
 
-## Licencia
+## License
 
 [GNU Affero General Public License v3.0](LICENSE).

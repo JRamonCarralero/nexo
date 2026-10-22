@@ -1,23 +1,25 @@
-# Contribuir a Nexo
+# Contributing to Nexo
 
-¡Gracias por tu interés! Nexo está en una fase muy temprana; antes de dedicar tiempo a un cambio grande, abre un *issue* para comentarlo.
+**English** · [Español](CONTRIBUTING.es.md)
 
-## Acuerdo de contribución (CLA)
+Thanks for your interest! Nexo is at a very early stage; before spending time on a large change, please open an issue to discuss it.
 
-Para poder aceptar contribuciones externas, cada colaborador debe firmar un **acuerdo de licencia de contribución (CLA)**. Se firma una sola vez, con un clic, desde el propio pull request. El CLA permite al proyecto mantener la licencia AGPL-3.0 y, si fuera necesario, ofrecer otras licencias en el futuro.
+## Contributor License Agreement (CLA)
 
-> El texto del CLA y el bot que lo gestiona se publicarán antes de aceptar la primera contribución externa.
+To accept external contributions, every contributor must sign a **Contributor License Agreement (CLA)**. You sign it once, with a single click, from the pull request itself. The CLA lets the project keep the AGPL-3.0 license and, if ever needed, offer other licenses in the future.
 
-## Flujo de trabajo
+> The CLA text and the bot that manages it will be published before the first external contribution is accepted.
 
-1. Crea una rama desde `main`.
-2. Haz tus cambios con tests.
-3. Comprueba que todo pasa: `make lint test` (y `make test-integration` si tocas el backend; necesita Docker).
-4. Abre un pull request. El CI debe estar en verde para hacer merge.
+## Workflow
 
-## Convenciones
+1. Create a branch from `main`.
+2. Make your changes, with tests.
+3. Check that everything passes: `make lint test` (plus `make test-integration` if you touch the backend; it needs Docker).
+4. Open a pull request. CI must be green to merge.
 
-- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/es/) — `feat(tasks): añade vista de tablero`, `fix(api): …`. Un *git hook* lo comprueba.
-- **Contrato primero:** los cambios de API empiezan en `api/openapi.yaml`; después `make generate`. No edites el código generado a mano.
-- **Arquitectura:** el backend es un monolito modular. Las reglas de dependencias se comprueban en `backend/arch_test.go`: un módulo no importa a otro, y solo `internal/app` conoce las implementaciones concretas.
-- **Errores:** usa `apperror` en el backend; los mensajes para el usuario se traducen en el frontend a partir de `code`.
+## Conventions
+
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) — `feat(tasks): add board view`, `fix(api): …`. A git hook checks it.
+- **Contract first:** API changes start in `api/openapi.yaml`, then `make generate`. Never edit generated code by hand.
+- **Architecture:** the backend is a modular monolith. Dependency rules are checked in `backend/arch_test.go`: a module never imports another one, and only `internal/app` knows the concrete implementations.
+- **Errors:** use `apperror` in the backend; user-facing messages are translated in the frontend from `code`.
