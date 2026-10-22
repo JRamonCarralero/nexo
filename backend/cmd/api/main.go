@@ -17,7 +17,7 @@ import (
 
 	"github.com/JRamonCarralero/nexo/backend/internal/app"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/config"
-	"github.com/JRamonCarralero/nexo/backend/internal/platform/database"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/logger"
 )
 
@@ -45,7 +45,7 @@ func run() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	db, err := database.Connect(ctx, cfg.DatabaseURL)
+	db, err := postgres.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}

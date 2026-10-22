@@ -1,4 +1,4 @@
-package database_test
+package postgres_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/apperror"
-	"github.com/JRamonCarralero/nexo/backend/internal/platform/database"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
 )
 
 func TestTranslateError(t *testing.T) {
@@ -33,7 +33,7 @@ func TestTranslateError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got *apperror.Error
-			require.ErrorAs(t, database.TranslateError(tt.in), &got)
+			require.ErrorAs(t, postgres.TranslateError(tt.in), &got)
 			assert.Equal(t, tt.wantKind, got.Kind)
 			assert.Equal(t, tt.wantCode, got.Code)
 			assert.ErrorIs(t, got, tt.in, "the original error must be kept as the cause")
@@ -42,8 +42,8 @@ func TestTranslateError(t *testing.T) {
 }
 
 func TestTranslateErrorPassThrough(t *testing.T) {
-	assert.NoError(t, database.TranslateError(nil))
+	assert.NoError(t, postgres.TranslateError(nil))
 
 	appErr := apperror.NotFound("task", 1)
-	assert.Same(t, appErr, database.TranslateError(appErr))
+	assert.Same(t, appErr, postgres.TranslateError(appErr))
 }

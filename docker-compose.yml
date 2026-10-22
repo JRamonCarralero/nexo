@@ -13,6 +13,8 @@ services:
       - "${NEXO_DB_PORT:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Creates the API login role on a fresh volume (`make up` also applies it).
+      - ./backend/db/local/roles.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nexo -d nexo"]
       interval: 2s

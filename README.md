@@ -50,6 +50,7 @@ make dev-web    # web at http://localhost:5173 (in another terminal)
 
 ## Documentation
 
+- [Data access: Store, scope and Row-Level Security](docs/data-access.md)
 - [Continuous integration (CI)](docs/ci.md)
 
 ## Contributing
