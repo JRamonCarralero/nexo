@@ -1,5 +1,6 @@
-# Documentación de planificación e ideas (de momento, fuera del repositorio)
-docs/
+# Planificación e ideas (de momento, fuera del repositorio).
+# La documentación del proyecto va en docs/, que sí se versiona.
+plan/
 
 # Entorno y secretos
 .env
