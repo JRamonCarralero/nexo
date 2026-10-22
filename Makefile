@@ -6,6 +6,7 @@ SHELL := bash
 BACKEND  := backend
 FRONTEND := frontend
 MIGRATIONS := db/migrations
+# Owner of the tables: used for migrations only. The API uses nexo_api (.env).
 DB_URL ?= postgres://nexo:nexo@localhost:5433/nexo?sslmode=disable
 GOOSE := cd $(BACKEND) && go tool goose -dir $(MIGRATIONS) postgres "$(DB_URL)"
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -30,6 +31,11 @@ setup: ## Install dependencies, tools and git hooks
 .PHONY: up
 up: ## Start local services (Postgres) and wait until they are healthy
 	docker compose up -d --wait
+	@$(MAKE) --no-print-directory db-roles
+
+.PHONY: db-roles
+db-roles: ## Create the local database roles (idempotent)
+	docker compose exec -T postgres psql -q -U nexo -d nexo -v ON_ERROR_STOP=1 < $(BACKEND)/db/local/roles.sql
 
 .PHONY: down
 down: ## Stop local services (data is kept)

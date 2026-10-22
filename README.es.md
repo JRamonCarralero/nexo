@@ -50,6 +50,7 @@ make dev-web    # web en http://localhost:5173 (en otra terminal)
 
 ## Documentación
 
+- [Acceso a datos: Store, alcance y Row-Level Security](docs/data-access.es.md)
 - [Integración continua (CI)](docs/ci.es.md)
 
 ## Contribuir

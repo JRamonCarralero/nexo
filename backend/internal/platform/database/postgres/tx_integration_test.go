@@ -1,48 +1,33 @@
 //go:build integration
 
-package database_test
+package postgres_test
 
 import (
 	"context"
 	"errors"
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/JRamonCarralero/nexo/backend/internal/platform/database"
-	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/dbtest"
+	"github.com/google/uuid"
+
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/scope"
 )
 
-var testDB *dbtest.Database
-
-func TestMain(m *testing.M) {
-	ctx := context.Background()
-	var err error
-	testDB, err = dbtest.Start(ctx)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	code := m.Run()
-	testDB.Stop(ctx)
-	os.Exit(code)
-}
-
-func setupTable(t *testing.T) *database.TxManager {
+func setupTable(t *testing.T) *postgres.TxManager {
 	t.Helper()
 	ctx := context.Background()
-	_, err := testDB.Pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS tx_probe (id int PRIMARY KEY); TRUNCATE tx_probe`)
+	_, err := testDB.OwnerPool.Exec(ctx, `CREATE TABLE IF NOT EXISTS tx_probe (id int PRIMARY KEY); TRUNCATE tx_probe`)
 	require.NoError(t, err)
-	return database.NewTxManager(testDB.Pool)
+	return postgres.NewTxManager(testDB.Pool)
 }
 
 func count(t *testing.T) int {
 	t.Helper()
 	var n int
-	require.NoError(t, testDB.Pool.QueryRow(context.Background(), `SELECT count(*) FROM tx_probe`).Scan(&n))
+	require.NoError(t, testDB.OwnerPool.QueryRow(context.Background(), `SELECT count(*) FROM tx_probe`).Scan(&n))
 	return n
 }
 
@@ -109,7 +94,7 @@ func TestTranslatesRealUniqueViolation(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = tm.Conn(ctx).Exec(ctx, `INSERT INTO tx_probe VALUES (1)`)
-	assert.ErrorContains(t, database.TranslateError(err), "ALREADY_EXISTS")
+	assert.ErrorContains(t, postgres.TranslateError(err), "ALREADY_EXISTS")
 }
 
 func TestMigrationsEnableExtensions(t *testing.T) {
@@ -118,4 +103,44 @@ func TestMigrationsEnableExtensions(t *testing.T) {
 		`SELECT count(*) FROM pg_extension WHERE extname IN ('citext','unaccent','pg_trgm')`).Scan(&n)
 	require.NoError(t, err)
 	assert.Equal(t, 3, n)
+}
+
+func TestWithinTxPublishesScope(t *testing.T) {
+	tm := setupTable(t)
+	user, ws := uuid.New(), uuid.New()
+	ctx := scope.WithWorkspace(scope.WithUser(context.Background(), user), ws)
+
+	var gotUser, gotWS *uuid.UUID
+	err := tm.WithinTx(ctx, func(ctx context.Context) error {
+		return tm.Conn(ctx).QueryRow(ctx, `SELECT nexo_user_id(), nexo_workspace_id()`).Scan(&gotUser, &gotWS)
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, gotUser)
+	require.NotNil(t, gotWS)
+	assert.Equal(t, user, *gotUser)
+	assert.Equal(t, ws, *gotWS)
+}
+
+func TestWithinTxWithoutScopeLeavesItEmpty(t *testing.T) {
+	tm := setupTable(t)
+
+	var gotUser, gotWS *uuid.UUID
+	err := tm.WithinTx(context.Background(), func(ctx context.Context) error {
+		return tm.Conn(ctx).QueryRow(ctx, `SELECT nexo_user_id(), nexo_workspace_id()`).Scan(&gotUser, &gotWS)
+	})
+
+	require.NoError(t, err)
+	assert.Nil(t, gotUser)
+	assert.Nil(t, gotWS)
+}
+
+func TestAPIRoleIsNotTableOwner(t *testing.T) {
+	var owner, current string
+	err := testDB.Pool.QueryRow(context.Background(),
+		`SELECT current_user, (SELECT pg_get_userbyid(relowner) FROM pg_class WHERE relname = 'goose_db_version')`).
+		Scan(&current, &owner)
+	require.NoError(t, err)
+	assert.Equal(t, "nexo_api", current)
+	assert.NotEqual(t, owner, current, "the API role must not own tables, or RLS would not apply")
 }
