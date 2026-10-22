@@ -48,6 +48,10 @@ make dev-web    # web at http://localhost:5173 (in another terminal)
 
 `make help` lists every command.
 
+## Documentation
+
+- [Continuous integration (CI)](docs/ci.md)
+
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md). Contributions require accepting the Contributor License Agreement (CLA).
