@@ -1,7 +1,7 @@
 # Firebase Local Emulator Suite for development and tests.
 # Only the Auth emulator for now (pure Node: no Java needed). Add a JRE when
 # emulators that need it (Firestore) are enabled.
-FROM node:24-alpine
+FROM node:25-alpine
 
 ARG FIREBASE_TOOLS_VERSION=15.34.1
 RUN npm install -g firebase-tools@${FIREBASE_TOOLS_VERSION} && npm cache clean --force
