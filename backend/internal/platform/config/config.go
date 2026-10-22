@@ -24,6 +24,13 @@ type Config struct {
 	DatabaseURL     string
 	LogLevel        slog.Level
 	ShutdownTimeout time.Duration
+
+	// FirebaseProjectID is the Firebase project whose ID tokens are accepted.
+	FirebaseProjectID string
+	// FirebaseAuthEmulatorHost points the Admin SDK to the Auth emulator (local only).
+	FirebaseAuthEmulatorHost string
+	// BootstrapSuperadminEmail, when set, makes sure the platform has a superadmin.
+	BootstrapSuperadminEmail string
 }
 
 func (c Config) IsProduction() bool { return c.Env == EnvProduction }
@@ -37,6 +44,10 @@ func Load() (Config, error) {
 		HTTPAddr:        ":" + getenv("PORT", "8080"),
 		DatabaseURL:     os.Getenv("DATABASE_URL"),
 		ShutdownTimeout: 15 * time.Second,
+
+		FirebaseProjectID:        os.Getenv("FIREBASE_PROJECT_ID"),
+		FirebaseAuthEmulatorHost: os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"),
+		BootstrapSuperadminEmail: os.Getenv("BOOTSTRAP_SUPERADMIN_EMAIL"),
 	}
 
 	if err := cfg.LogLevel.UnmarshalText([]byte(getenv("LOG_LEVEL", "info"))); err != nil {
@@ -50,6 +61,13 @@ func Load() (Config, error) {
 	}
 	if cfg.DatabaseURL == "" {
 		return Config{}, errors.New("DATABASE_URL is required")
+	}
+	if cfg.FirebaseProjectID == "" {
+		return Config{}, errors.New("FIREBASE_PROJECT_ID is required")
+	}
+	if cfg.IsProduction() && cfg.FirebaseAuthEmulatorHost != "" {
+		// The emulator accepts unsigned tokens: it must never reach production.
+		return Config{}, errors.New("FIREBASE_AUTH_EMULATOR_HOST must not be set in production")
 	}
 	return cfg, nil
 }

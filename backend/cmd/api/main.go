@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/JRamonCarralero/nexo/backend/internal/app"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/auth/firebase"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/config"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/logger"
@@ -51,7 +52,18 @@ func run() error {
 	}
 	defer db.Close()
 
-	application := app.New(app.Deps{Config: cfg, Logger: log, DB: db, Version: version})
+	authn, err := firebase.New(ctx, cfg.FirebaseProjectID)
+	if err != nil {
+		return err
+	}
+
+	application, err := app.New(app.Deps{Config: cfg, Logger: log, DB: db, Authenticator: authn, Version: version})
+	if err != nil {
+		return err
+	}
+	if err := application.Bootstrap(ctx); err != nil {
+		return err
+	}
 
 	srv := &http.Server{
 		Addr:              cfg.HTTPAddr,
