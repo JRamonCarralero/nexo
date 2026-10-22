@@ -72,7 +72,7 @@ Usa [`dorny/paths-filter`](https://github.com/dorny/paths-filter) para comparar 
 | Salida | Rutas |
 |---|---|
 | `api` | `api/**`, `redocly.yaml` |
-| `backend` | `backend/**`, `api/**`, `.github/workflows/ci.yml` |
+| `backend` | `backend/**`, `api/**`, `docker/**`, `.github/workflows/ci.yml` |
 | `frontend` | `frontend/**`, `api/**`, `.github/workflows/ci.yml` |
 
 ### 2. `contract` — Contrato de la API
@@ -86,7 +86,6 @@ Se ejecuta si cambia `api/`.
 
 Si `main` todavía no tiene contrato, se omite la comprobación de cambios incompatibles.
 
-> La regla `security-defined` está desactivada en `redocly.yaml` hasta que exista el primer endpoint con autenticación. Hay que reactivarla entonces.
 
 ### 3. `backend` — Backend en Go
 
@@ -94,10 +93,11 @@ Se ejecuta si cambia `backend/` o `api/`. Todos los pasos se ejecutan dentro de 
 
 | Paso | Qué comprueba |
 |---|---|
-| **Código generado al día** | Ejecuta `go generate ./...` (oapi-codegen) y falla si algo cambia. Detecta que se modificó el contrato o una consulta sin regenerar el código. |
+| **Código generado al día** | Ejecuta `go generate ./...` (oapi-codegen) y `go tool mockery` (mocks de los tests), y falla si algo cambia o aparecen ficheros nuevos. Detecta que se modificó el contrato, una consulta o una interfaz sin regenerar el código. |
 | **Lint** | [golangci-lint](https://golangci-lint.run/) con la configuración de [`backend/.golangci.yml`](../backend/.golangci.yml), incluido `depguard`, que limita dónde se pueden importar pgx, Firebase y Gin. |
 | **Tests unitarios** | `go test -race ./...`. Incluye [`arch_test.go`](../backend/arch_test.go), que comprueba las reglas de dependencias entre paquetes (un módulo no importa a otro, solo `internal/app` conoce las implementaciones concretas…). |
-| **Tests de integración** | `go test -race -tags integration ./...`. Levanta un PostgreSQL real con [testcontainers](https://golang.testcontainers.org/) (los runners de GitHub tienen Docker) y aplica las migraciones. |
+| **Imagen del emulador de Firebase** | Construye `docker/firebase`, que usan los tests de integración. |
+| **Tests de integración** | `go test -race -tags integration ./...`. Levanta un PostgreSQL real y el emulador de Firebase Auth con [testcontainers](https://golang.testcontainers.org/) (los runners de GitHub tienen Docker) y aplica las migraciones. |
 | **Build** | `go build ./cmd/api`. |
 | **Imagen Docker** | Construye la imagen con [`backend/Dockerfile`](../backend/Dockerfile) (todavía no se publica). Asegura que la imagen sigue compilando. |
 

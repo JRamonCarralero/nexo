@@ -10,15 +10,21 @@ info:
     url: https://www.gnu.org/licenses/agpl-3.0.html
 servers:
   - url: /api/v1
+# Every operation requires a Firebase ID token unless it declares `security: []`.
+security:
+  - bearerAuth: []
 tags:
   - name: system
     description: Estado del servicio
+  - name: users
+    description: Usuarios y sesión
 paths:
   /health:
     get:
       operationId: getHealth
       tags: [system]
       summary: Estado del servicio y de sus dependencias
+      security: []
       responses:
         "200":
           description: El servicio y sus dependencias funcionan
@@ -30,7 +36,32 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Usuario autenticado
+      description: |
+        Devuelve el perfil del usuario que hace la petición. La primera petición
+        autenticada de una cuenta crea su usuario en Nexo.
+      responses:
+        "200":
+          description: Perfil del usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: ID token de Firebase Authentication.
   responses:
     Problem:
       description: Error (RFC 9457 Problem Details)
@@ -56,6 +87,28 @@ components:
             enum: [ok, fail]
           example:
             database: ok
+    User:
+      type: object
+      required: [id, email, emailVerified, name, avatarUrl, isSuperadmin, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        emailVerified:
+          type: boolean
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        isSuperadmin:
+          type: boolean
+          description: Administrador de la plataforma (no de un espacio de trabajo).
+        createdAt:
+          type: string
+          format: date-time
     Problem:
       type: object
       description: Error según RFC 9457. `code` es estable y legible por máquina; el frontend lo usa para traducir el mensaje.

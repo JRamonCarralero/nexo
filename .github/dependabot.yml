@@ -30,3 +30,8 @@ updates:
     directory: /backend
     schedule:
       interval: monthly
+
+  - package-ecosystem: docker
+    directory: /docker/firebase
+    schedule:
+      interval: monthly

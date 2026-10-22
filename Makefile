@@ -76,8 +76,8 @@ db-reset: ## Drop everything and migrate again (seed will be added here)
 ## ---------- Code generation ----------
 
 .PHONY: generate
-generate: ## Regenerate code from the contract (Go server + TS client)
-	cd $(BACKEND) && go generate ./...
+generate: ## Regenerate code: contract (Go server + TS client) and mocks
+	cd $(BACKEND) && go generate ./... && go tool mockery --log-level warn
 	cd $(FRONTEND) && pnpm generate
 
 ## ---------- Quality ----------
@@ -97,8 +97,12 @@ test: ## Unit tests (no Docker), including architecture rules
 	cd $(BACKEND) && go test -race ./...
 	cd $(FRONTEND) && pnpm test
 
+.PHONY: firebase-image
+firebase-image: ## Build the Firebase emulator image (used by compose and tests)
+	docker build -q -t nexo-firebase-emulator docker/firebase
+
 .PHONY: test-integration
-test-integration: ## Backend integration tests (needs Docker)
+test-integration: firebase-image ## Backend integration tests (needs Docker)
 	cd $(BACKEND) && go test -race -tags integration ./...
 
 .PHONY: test-all

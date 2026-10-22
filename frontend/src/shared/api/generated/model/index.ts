@@ -14,3 +14,4 @@ export * from './healthChecks';
 export * from './healthStatus';
 export * from './problem';
 export * from './problemResponse';
+export * from './user';

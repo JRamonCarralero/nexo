@@ -38,6 +38,7 @@ jobs:
             backend:
               - 'backend/**'
               - 'api/**'
+              - 'docker/**'
               - '.github/workflows/ci.yml'
             frontend:
               - 'frontend/**'
@@ -84,7 +85,9 @@ jobs:
       - name: Generated code is up to date
         run: |
           go generate ./...
+          go tool mockery --log-level warn
           git diff --exit-code || (echo "::error::Generated code is stale. Run 'make generate' and commit." && exit 1)
+          test -z "$(git status --porcelain)" || (git status --porcelain && echo "::error::Generated files are missing. Run 'make generate' and commit." && exit 1)
       - name: Lint
         uses: golangci/golangci-lint-action@v9
         with:
@@ -92,6 +95,8 @@ jobs:
           working-directory: backend
       - name: Unit tests (with architecture rules)
         run: go test -race ./...
+      - name: Firebase emulator image
+        run: docker build -q -t nexo-firebase-emulator ../docker/firebase
       - name: Integration tests
         run: go test -race -tags integration ./...
       - name: Build

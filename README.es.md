@@ -40,7 +40,7 @@ Requisitos: Go 1.26+, Node 24.15+ (ver `.nvmrc`), pnpm 10, Docker y `make`.
 
 ```bash
 make setup      # dependencias, herramientas y git hooks; crea backend/.env
-make up         # Postgres en Docker (puerto 5433, para convivir con un Postgres local en 5432)
+make up         # Postgres (puerto 5433) y el emulador de Firebase Auth (interfaz en http://localhost:4000)
 make db-migrate # aplica las migraciones
 make dev-api    # API en http://localhost:8080
 make dev-web    # web en http://localhost:5173 (en otra terminal)
@@ -50,6 +50,7 @@ make dev-web    # web en http://localhost:5173 (en otra terminal)
 
 ## Documentación
 
+- [Autenticación y usuarios](docs/auth.es.md)
 - [Acceso a datos: Store, alcance y Row-Level Security](docs/data-access.es.md)
 - [Integración continua (CI)](docs/ci.es.md)
 

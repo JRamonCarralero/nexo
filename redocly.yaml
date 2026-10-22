@@ -1,6 +1,4 @@
 # OpenAPI lint rules (run in CI on changes to api/).
 extends:
   - recommended
-rules:
-  # Authentication arrives with the first protected endpoint; turn this back on then.
-  security-defined: off
+rules: {}

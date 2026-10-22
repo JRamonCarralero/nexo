@@ -6,6 +6,8 @@
 --
 -- Idempotent: runs on a fresh Docker volume (docker-entrypoint-initdb.d), on
 -- every `make up` and in the integration tests.
+SET client_min_messages = warning; -- keep repeated runs quiet
+
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'nexo_app') THEN
