@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Generated code: collapsed in diffs on GitHub.
+backend/internal/httpserver/api/api.gen.go linguist-generated=true
+frontend/src/shared/api/generated/** linguist-generated=true
+frontend/src/app/routeTree.gen.ts linguist-generated=true

@@ -1,0 +1,159 @@
+name: CI
+
+# Runs on pull requests to main (every new commit in the PR re-runs it) and on
+# main itself after a merge. Pushes to other branches without a PR do not run it.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A new push to the same branch cancels the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'api/**'
+              - 'redocly.yaml'
+            backend:
+              - 'backend/**'
+              - 'api/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - 'api/**'
+              - '.github/workflows/ci.yml'
+
+  contract:
+    name: API contract
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+          cache: false
+      - name: Lint OpenAPI
+        run: npx --yes @redocly/cli@latest lint api/openapi.yaml
+      - name: Breaking changes against main
+        run: |
+          if git show origin/main:api/openapi.yaml > /tmp/base.yaml 2>/dev/null; then
+            go run github.com/oasdiff/oasdiff@latest breaking /tmp/base.yaml api/openapi.yaml --fail-on ERR
+          else
+            echo "No contract on main yet: skipping"
+          fi
+
+  backend:
+    name: Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Generated code is up to date
+        run: |
+          go generate ./...
+          git diff --exit-code || (echo "::error::Generated code is stale. Run 'make generate' and commit." && exit 1)
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: backend
+      - name: Unit tests (with architecture rules)
+        run: go test -race ./...
+      - name: Integration tests
+        run: go test -race -tags integration ./...
+      - name: Build
+        run: go build ./cmd/api
+      - name: Docker image
+        run: docker build --build-arg VERSION=${{ github.sha }} -t nexo-api:ci .
+
+  frontend:
+    name: Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Generated code is up to date
+        run: |
+          pnpm generate
+          git diff --exit-code || (echo "::error::Generated code is stale. Run 'make generate' and commit." && exit 1)
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  security:
+    name: Security
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v6
+        if: needs.changes.outputs.backend == 'true'
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Go vulnerabilities
+        if: needs.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - uses: pnpm/action-setup@v4
+        if: needs.changes.outputs.frontend == 'true'
+        with:
+          package_json_file: frontend/package.json
+      - name: npm vulnerabilities
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: frontend
+        run: pnpm audit --prod --audit-level high

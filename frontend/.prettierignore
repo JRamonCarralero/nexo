@@ -1,0 +1,4 @@
+dist
+pnpm-lock.yaml
+src/shared/api/generated
+src/app/routeTree.gen.ts

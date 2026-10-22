@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+# Runs from internal/http/api (via go generate): paths are relative to that directory.
+package: api
+output: api.gen.go
+generate:
+  models: true
+  gin-server: true
+  strict-server: true
+  embedded-spec: true

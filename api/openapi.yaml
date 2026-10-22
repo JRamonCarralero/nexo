@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: Nexo API
+  version: 0.1.0
+  description: |
+    API de Nexo. Este contrato es la fuente de verdad: el servidor Go (oapi-codegen)
+    y el cliente del frontend (orval) se generan a partir de él.
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+servers:
+  - url: /api/v1
+tags:
+  - name: system
+    description: Estado del servicio
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [system]
+      summary: Estado del servicio y de sus dependencias
+      responses:
+        "200":
+          description: El servicio y sus dependencias funcionan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+components:
+  responses:
+    Problem:
+      description: Error (RFC 9457 Problem Details)
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    Health:
+      type: object
+      required: [status, version, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+          example: 0.1.0
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [ok, fail]
+          example:
+            database: ok
+    Problem:
+      type: object
+      description: Error según RFC 9457. `code` es estable y legible por máquina; el frontend lo usa para traducir el mensaje.
+      required: [title, status, code, traceId]
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Not Found
+        status:
+          type: integer
+          example: 404
+        code:
+          type: string
+          example: TASK_NOT_FOUND
+        detail:
+          type: string
+          example: task 0192f7a4-… not found
+        traceId:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldError"
+    FieldError:
+      type: object
+      required: [field, code]
+      properties:
+        field:
+          type: string
+          example: title
+        code:
+          type: string
+          example: REQUIRED
+        message:
+          type: string

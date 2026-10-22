@@ -1,0 +1,22 @@
+{
+  "app": {
+    "tagline": "Gestiona tus proyectos. Sabe qué hacer ahora."
+  },
+  "system": {
+    "checking": "Comprobando el servicio…",
+    "ok": "API conectada · v{{version}}",
+    "down": "API no disponible"
+  },
+  "errors": {
+    "default": "Ha ocurrido un error inesperado.",
+    "NETWORK_ERROR": "No se puede conectar con el servidor. Revisa tu conexión.",
+    "UNEXPECTED_RESPONSE": "El servidor ha respondido de forma inesperada.",
+    "SERVICE_UNAVAILABLE": "El servicio no está disponible en este momento. Inténtalo de nuevo en unos minutos.",
+    "INTERNAL_ERROR": "Ha ocurrido un error en el servidor.",
+    "INVALID_REQUEST": "Los datos enviados no son válidos.",
+    "UNAUTHENTICATED": "Tienes que iniciar sesión.",
+    "FORBIDDEN": "No tienes permiso para hacer esto.",
+    "ROUTE_NOT_FOUND": "El recurso solicitado no existe."
+  },
+  "traceId": "Código de seguimiento: {{traceId}}"
+}
