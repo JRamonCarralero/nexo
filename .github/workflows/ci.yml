@@ -114,7 +114,7 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json
       - uses: actions/setup-node@v7
@@ -154,7 +154,7 @@ jobs:
         if: needs.changes.outputs.backend == 'true'
         working-directory: backend
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: needs.changes.outputs.frontend == 'true'
         with:
           package_json_file: frontend/package.json
