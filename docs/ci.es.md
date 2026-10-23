@@ -147,6 +147,7 @@ Se ejecuta siempre.
 | npm | `frontend/` | Semanal | Actualizaciones *minor* y *patch* juntas; las *major* por separado, para revisarlas una a una |
 | GitHub Actions | `/` | Mensual | — |
 | Docker | `backend/` | Mensual | — |
+| Docker | `docker/firebase/` | Mensual | Se ignoran los saltos de versión mayor de Node: siguen a `.nvmrc` y se suben a mano |
 
 ## Antes del CI: ganchos de git en local
 

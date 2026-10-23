@@ -147,6 +147,7 @@ Always runs.
 | npm | `frontend/` | Weekly | Minor and patch updates together; majors separately, to review them one by one |
 | GitHub Actions | `/` | Monthly | — |
 | Docker | `backend/` | Monthly | — |
+| Docker | `docker/firebase/` | Monthly | Node majors ignored: they follow `.nvmrc` and are bumped by hand |
 
 ## Before CI: local git hooks
 

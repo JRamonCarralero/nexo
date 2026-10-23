@@ -35,3 +35,8 @@ updates:
     directory: /docker/firebase
     schedule:
       interval: monthly
+    ignore:
+      # The Node major follows .nvmrc (an LTS) and is bumped by hand in both
+      # places at once. Minor and patch updates still come through.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
