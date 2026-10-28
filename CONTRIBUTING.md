@@ -23,3 +23,5 @@ To accept external contributions, every contributor must sign a **Contributor Li
 - **Contract first:** API changes start in `api/openapi.yaml`, then `make generate`. Never edit generated code by hand.
 - **Architecture:** the backend is a modular monolith. Dependency rules are checked in `backend/arch_test.go`: a module never imports another one, and only `internal/app` knows the concrete implementations.
 - **Errors:** use `apperror` in the backend; user-facing messages are translated in the frontend from `code`.
+- **Decisions:** a significant technical decision (a new library, a pattern, a security rule…) is recorded as an ADR in `docs/backend/adr/` or `docs/frontend/adr/`, in English and Spanish. See the index in each folder for the template.
+- **Documentation:** keep `docs/` in sync with the code, in English (`*.md`) and Spanish (`*.es.md`).

@@ -8,10 +8,10 @@ Cómo lee y escribe datos el backend: el `Store` genérico, el alcance de la pet
 
 | Paquete | Contenido | Quién lo usa |
 |---|---|---|
-| [`platform/database`](../backend/internal/platform/database/) | Contratos independientes de la tecnología: `Store[T]`, `Entity`, `Model`, `TenantModel`, `Query`, `Filter`, `Page`, `Transactor` | Servicios y repositorios |
-| [`platform/database/postgres`](../backend/internal/platform/database/postgres/) | Implementación de PostgreSQL: conexión, `TxManager`, `Store[T]`, traducción de errores | `internal/app` (montaje) y los ficheros `store_postgres.go` de los módulos |
-| [`platform/database/postgres/pgtest`](../backend/internal/platform/database/postgres/pgtest/) | PostgreSQL desechable para los tests de integración | Tests |
-| [`platform/scope`](../backend/internal/platform/scope/) | El usuario que actúa y el espacio de trabajo, en el `context` | Middlewares (lo fijan), capa de base de datos (lo lee) |
+| [`platform/database`](../../backend/internal/platform/database/) | Contratos independientes de la tecnología: `Store[T]`, `Entity`, `Model`, `TenantModel`, `Query`, `Filter`, `Page`, `Transactor` | Servicios y repositorios |
+| [`platform/database/postgres`](../../backend/internal/platform/database/postgres/) | Implementación de PostgreSQL: conexión, `TxManager`, `Store[T]`, traducción de errores | `internal/app` (montaje) y los ficheros `store_postgres.go` de los módulos |
+| [`platform/database/postgres/pgtest`](../../backend/internal/platform/database/postgres/pgtest/) | PostgreSQL desechable para los tests de integración | Tests |
+| [`platform/scope`](../../backend/internal/platform/scope/) | El usuario que actúa y el espacio de trabajo, en el `context` | Middlewares (lo fijan), capa de base de datos (lo lee) |
 
 Cambiar de motor de base de datos supone escribir una implementación nueva de los contratos y reescribir las consultas a medida. Servicios y handlers no cambian.
 
@@ -123,7 +123,7 @@ Después, añade los tests de aislamiento (obligatorios para toda entidad de esp
 
 | Entorno | Cómo se crean los roles |
 |---|---|
-| Local | [`db/local/roles.sql`](../backend/db/local/roles.sql): al crear el volumen de Docker y en cada `make up` |
+| Local | [`db/local/roles.sql`](../../backend/db/local/roles.sql): al crear el volumen de Docker y en cada `make up` |
 | Tests | `pgtest` ejecuta el mismo fichero en el contenedor de pruebas |
 | Producción | Se crean con la infraestructura (nunca con la contraseña de local) |
 
@@ -137,4 +137,4 @@ testDB, err = pgtest.Start(ctx)
 // testDB.OwnerPool → dueño de las tablas: preparar datos o inspeccionar filas saltándose RLS
 ```
 
-Mira [`store_integration_test.go`](../backend/internal/platform/database/postgres/store_integration_test.go) para ver ejemplos, incluidos tests de RLS que ejecutan consultas sin ningún `WHERE`.
+Mira [`store_integration_test.go`](../../backend/internal/platform/database/postgres/store_integration_test.go) para ver ejemplos, incluidos tests de RLS que ejecutan consultas sin ningún `WHERE`.

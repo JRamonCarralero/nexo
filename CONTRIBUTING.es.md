@@ -23,3 +23,5 @@ Para poder aceptar contribuciones externas, cada colaborador debe firmar un **ac
 - **Contrato primero:** los cambios de API empiezan en `api/openapi.yaml`; después `make generate`. No edites el código generado a mano.
 - **Arquitectura:** el backend es un monolito modular. Las reglas de dependencias se comprueban en `backend/arch_test.go`: un módulo no importa a otro, y solo `internal/app` conoce las implementaciones concretas.
 - **Errores:** usa `apperror` en el backend; los mensajes para el usuario se traducen en el frontend a partir de `code`.
+- **Decisiones:** una decisión técnica importante (una librería nueva, un patrón, una regla de seguridad…) se registra como ADR en `docs/backend/adr/` o `docs/frontend/adr/`, en inglés y en español. La plantilla está en el índice de cada carpeta.
+- **Documentación:** mantén `docs/` al día con el código, en inglés (`*.md`) y en español (`*.es.md`).

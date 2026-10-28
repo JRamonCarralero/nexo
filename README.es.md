@@ -50,9 +50,11 @@ make dev-web    # web en http://localhost:5173 (en otra terminal)
 
 ## Documentación
 
-- [Autenticación y usuarios](docs/auth.es.md)
-- [Acceso a datos: Store, alcance y Row-Level Security](docs/data-access.es.md)
-- [Integración continua (CI)](docs/ci.es.md)
+| Área | Documentos |
+|---|---|
+| Backend | [Arquitectura](docs/backend/README.es.md) · [Decisiones (ADR)](docs/backend/adr/README.es.md) · [Acceso a datos](docs/backend/data-access.es.md) · [Autenticación y usuarios](docs/backend/auth.es.md) |
+| Frontend | [Arquitectura](docs/frontend/README.es.md) · [Decisiones (ADR)](docs/frontend/adr/README.es.md) |
+| Repositorio | [Integración continua (CI)](docs/ci.es.md) |
 
 ## Contribuir
 
