@@ -23,7 +23,7 @@ sequenceDiagram
 ```
 
 1. La web inicia sesión con el SDK de Firebase y envía el **ID token** como `Authorization: Bearer <token>`.
-2. El middleware de autenticación lo verifica a través de la interfaz `Authenticator` ([`platform/auth`](../backend/internal/platform/auth/auth.go)); la implementación de Firebase está en [`platform/auth/firebase`](../backend/internal/platform/auth/firebase/firebase.go).
+2. El middleware de autenticación lo verifica a través de la interfaz `Authenticator` ([`platform/auth`](../../backend/internal/platform/auth/auth.go)); la implementación de Firebase está en [`platform/auth/firebase`](../../backend/internal/platform/auth/firebase/firebase.go).
 3. La identidad verificada se asocia a un usuario de Nexo, que **se crea automáticamente en la primera petición autenticada**.
 4. El id del usuario entra en el alcance de la petición: la capa de base de datos lo usa para la Row-Level Security y para `created_by`.
 
@@ -31,7 +31,7 @@ Los errores son respuestas `401` en formato Problem con el código `MISSING_TOKE
 
 ## Qué rutas están protegidas
 
-**Todas las rutas exigen token salvo que el contrato las marque como públicas** con `security: []` en [`api/openapi.yaml`](../api/openapi.yaml) (hoy solo `/health`). Al arrancar, el router lee el contrato embebido para saber qué operaciones son públicas. Las rutas que no están en el contrato también quedan protegidas: olvidarse de declarar una ruta nunca la hace pública.
+**Todas las rutas exigen token salvo que el contrato las marque como públicas** con `security: []` en [`api/openapi.yaml`](../../api/openapi.yaml) (hoy solo `/health`). Al arrancar, el router lee el contrato embebido para saber qué operaciones son públicas. Las rutas que no están en el contrato también quedan protegidas: olvidarse de declarar una ruta nunca la hace pública.
 
 ## Usuarios
 
@@ -54,7 +54,7 @@ Los emails no distinguen mayúsculas (`citext`). Un email **sin verificar** nunc
 
 ## Superadmin de la plataforma
 
-El superadmin opera la plataforma; **no** es el administrador de un espacio de trabajo. Lo crea el bootstrap de arranque ([`internal/bootstrap`](../backend/internal/bootstrap/bootstrap.go)) cuando está definida `BOOTSTRAP_SUPERADMIN_EMAIL`:
+El superadmin opera la plataforma; **no** es el administrador de un espacio de trabajo. Lo crea el bootstrap de arranque ([`internal/bootstrap`](../../backend/internal/bootstrap/bootstrap.go)) cuando está definida `BOOTSTRAP_SUPERADMIN_EMAIL`:
 
 | Situación | Resultado |
 |---|---|
@@ -97,4 +97,4 @@ Usa el `idToken` de la respuesta como `Authorization: Bearer <idToken>`. Para ve
 ## Tests
 
 - **Unitarios:** el servicio de usuarios con mocks de mockery; el router con un `Authenticator` y un repositorio falsos.
-- **Integración:** el adaptador de Firebase contra el emulador ([`fbtest`](../backend/internal/platform/auth/firebase/fbtest/fbtest.go)) y el repositorio de usuarios contra PostgreSQL, incluidas la RLS y los permisos por columna. La imagen del emulador se construye con `make firebase-image` (también lo hacen `make test-integration` y el CI).
+- **Integración:** el adaptador de Firebase contra el emulador ([`fbtest`](../../backend/internal/platform/auth/firebase/fbtest/fbtest.go)) y el repositorio de usuarios contra PostgreSQL, incluidas la RLS y los permisos por columna. La imagen del emulador se construye con `make firebase-image` (también lo hacen `make test-integration` y el CI).

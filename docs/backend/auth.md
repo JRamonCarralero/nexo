@@ -23,7 +23,7 @@ sequenceDiagram
 ```
 
 1. The web app signs in with the Firebase SDK and sends the **ID token** as `Authorization: Bearer <token>`.
-2. The auth middleware verifies it through the `Authenticator` interface ([`platform/auth`](../backend/internal/platform/auth/auth.go)); the Firebase implementation lives in [`platform/auth/firebase`](../backend/internal/platform/auth/firebase/firebase.go).
+2. The auth middleware verifies it through the `Authenticator` interface ([`platform/auth`](../../backend/internal/platform/auth/auth.go)); the Firebase implementation lives in [`platform/auth/firebase`](../../backend/internal/platform/auth/firebase/firebase.go).
 3. The verified identity is mapped to a Nexo user, **created automatically on the first authenticated request**.
 4. The user id goes into the request scope: the database layer uses it for Row-Level Security and `created_by`.
 
@@ -31,7 +31,7 @@ Errors are `401` Problem responses with code `MISSING_TOKEN`, `INVALID_TOKEN` or
 
 ## Which routes are protected
 
-**Every route requires a token unless the contract marks it as public** with `security: []` in [`api/openapi.yaml`](../api/openapi.yaml) (today only `/health`). At startup the router reads the embedded contract to know the public operations. Routes that are not in the contract are protected too: forgetting to declare a route never makes it public.
+**Every route requires a token unless the contract marks it as public** with `security: []` in [`api/openapi.yaml`](../../api/openapi.yaml) (today only `/health`). At startup the router reads the embedded contract to know the public operations. Routes that are not in the contract are protected too: forgetting to declare a route never makes it public.
 
 ## Users
 
@@ -54,7 +54,7 @@ Emails are case-insensitive (`citext`). An **unverified** email never takes over
 
 ## Platform superadmin
 
-The superadmin operates the platform; it is **not** a workspace admin. It is created by the startup bootstrap ([`internal/bootstrap`](../backend/internal/bootstrap/bootstrap.go)) when `BOOTSTRAP_SUPERADMIN_EMAIL` is set:
+The superadmin operates the platform; it is **not** a workspace admin. It is created by the startup bootstrap ([`internal/bootstrap`](../../backend/internal/bootstrap/bootstrap.go)) when `BOOTSTRAP_SUPERADMIN_EMAIL` is set:
 
 | Situation | Result |
 |---|---|
@@ -97,4 +97,4 @@ Use the `idToken` of the response as `Authorization: Bearer <idToken>`. To verif
 ## Testing
 
 - **Unit:** the user service with mockery mocks; the router with fake `Authenticator` and repository.
-- **Integration:** the Firebase adapter against the emulator ([`fbtest`](../backend/internal/platform/auth/firebase/fbtest/fbtest.go)), and the user repository against PostgreSQL, including RLS and column privileges. The emulator image is built with `make firebase-image` (also run by `make test-integration` and CI).
+- **Integration:** the Firebase adapter against the emulator ([`fbtest`](../../backend/internal/platform/auth/firebase/fbtest/fbtest.go)), and the user repository against PostgreSQL, including RLS and column privileges. The emulator image is built with `make firebase-image` (also run by `make test-integration` and CI).
