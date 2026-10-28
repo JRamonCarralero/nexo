@@ -13,11 +13,10 @@
  * invitaciones; `member` trabaja en él; `guest` es un colaborador externo
  * (sus restricciones llegarán con los proyectos).
  */
-export type Role = typeof Role[keyof typeof Role];
-
+export type Role = (typeof Role)[keyof typeof Role]
 
 export const Role = {
   admin: 'admin',
   member: 'member',
   guest: 'guest',
-} as const;
+} as const

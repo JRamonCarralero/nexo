@@ -7,13 +7,13 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Role } from './role';
+import type { Role } from './role'
 
 export interface Member {
-  userId: string;
-  email: string;
-  name: string;
-  avatarUrl: string;
-  role: Role;
-  joinedAt: string;
+  userId: string
+  email: string
+  name: string
+  avatarUrl: string
+  role: Role
+  joinedAt: string
 }

@@ -7,8 +7,8 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Role } from './role';
+import type { Role } from './role'
 
 export interface MemberUpdate {
-  role: Role;
+  role: Role
 }

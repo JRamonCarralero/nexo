@@ -10,8 +10,8 @@
 
 export interface WorkspaceInput {
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  name: string;
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string
 }

@@ -7,8 +7,8 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Member } from './member';
+import type { Member } from './member'
 
 export interface MemberList {
-  items: Member[];
+  items: Member[]
 }

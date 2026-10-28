@@ -8,4 +8,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type HealthChecks = {[key: string]: 'ok' | 'fail'};
+export type HealthChecks = { [key: string]: 'ok' | 'fail' }

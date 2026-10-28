@@ -7,11 +7,11 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Role } from './role';
+import type { Role } from './role'
 
 export interface Workspace {
-  id: string;
-  name: string;
-  myRole: Role;
-  createdAt: string;
+  id: string
+  name: string
+  myRole: Role
+  createdAt: string
 }

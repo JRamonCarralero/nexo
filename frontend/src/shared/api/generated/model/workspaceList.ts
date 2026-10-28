@@ -7,8 +7,8 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Workspace } from './workspace';
+import type { Workspace } from './workspace'
 
 export interface WorkspaceList {
-  items: Workspace[];
+  items: Workspace[]
 }
