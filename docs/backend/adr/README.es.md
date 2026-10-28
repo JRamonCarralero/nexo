@@ -11,7 +11,7 @@ Un ADR recoge una decisión importante: el contexto, qué se decidió, por qué 
 | [0003](0003-contract-first-api.es.md) | API definida primero en el contrato (OpenAPI) | Aceptado | 2026-10-22 |
 | [0004](0004-postgresql.es.md) | PostgreSQL como base de datos principal | Aceptado | 2026-10-22 |
 | [0005](0005-data-access-store.es.md) | Acceso a datos independiente de la tecnología: Store genérico y consultas a medida | Aceptado | 2026-10-22 |
-| [0006](0006-multi-tenancy-rls.es.md) | Multi-tenancy con esquema compartido y Row-Level Security | Aceptado | 2026-10-23 |
+| [0006](0006-multi-tenancy-rls.es.md) | Multi-tenancy con esquema compartido y Row-Level Security | Aceptado — modificado por el [ADR-0022](0022-rls-without-force.es.md) | 2026-10-23 |
 | [0007](0007-uuidv7-identifiers.es.md) | Identificadores UUIDv7 generados en Go | Aceptado | 2026-10-22 |
 | [0008](0008-cursor-pagination.es.md) | Paginación por cursor por defecto | Aceptado | 2026-10-22 |
 | [0009](0009-errors-problem-details.es.md) | Errores de aplicación y Problem Details (RFC 9457) | Aceptado | 2026-10-22 |
@@ -22,11 +22,13 @@ Un ADR recoge una decisión importante: el contexto, qué se decidió, por qué 
 | [0014](0014-superadmin-bootstrap.es.md) | Bootstrap del superadmin de la plataforma | Aceptado | 2026-10-23 |
 | [0015](0015-commands-and-outbox.es.md) | Comandos y eventos con outbox transaccional | Aceptado (aún no implementado) | 2026-10-22 |
 | [0016](0016-custom-fields-jsonb.es.md) | Campos personalizados en JSONB | Aceptado (aún no implementado) | 2026-10-22 |
-| [0017](0017-workspace-in-url-path.es.md) | Espacio de trabajo en la ruta de la URL | Aceptado (aún no implementado) | 2026-10-23 |
+| [0017](0017-workspace-in-url-path.es.md) | Espacio de trabajo en la ruta de la URL | Aceptado | 2026-10-23 |
 | [0018](0018-testing-strategy.es.md) | Estrategia de tests | Aceptado | 2026-10-22 |
 | [0019](0019-migrations-goose.es.md) | Migraciones SQL con goose, embebidas en el binario | Aceptado | 2026-10-22 |
 | [0020](0020-local-environment.es.md) | Entorno local con Docker Compose y emuladores | Aceptado | 2026-10-23 |
 | [0021](0021-realtime-signals.es.md) | Tiempo real mediante documentos de aviso en Firestore | Aceptado (aún no implementado) | 2026-10-22 |
+| [0022](0022-rls-without-force.es.md) | Row-Level Security sin FORCE; el dueño ejecuta las funciones privilegiadas | Aceptado | 2026-10-28 |
+| [0023](0023-workspaces-and-roles.es.md) | Espacios de trabajo, membresías y roles | Aceptado | 2026-10-28 |
 
 ## Cómo escribir un ADR nuevo
 

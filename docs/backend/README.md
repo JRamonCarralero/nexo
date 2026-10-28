@@ -58,7 +58,8 @@ backend/
 │   │   └── api/                Code generated from api/openapi.yaml (do not edit)
 │   ├── modules/                Business modules (one folder per domain)
 │   │   ├── system/             Health check
-│   │   └── user/               Users and the authenticated profile
+│   │   ├── user/               Users and the authenticated profile
+│   │   └── workspace/          Workspaces, memberships and roles
 │   └── platform/               Infrastructure, no business knowledge
 │       ├── apperror/           Application error type
 │       ├── auth/               Authenticator interface (+ firebase/ adapter)
@@ -136,7 +137,7 @@ sequenceDiagram
     participant R as Repository / Store
     participant DB as PostgreSQL
     C->>G: HTTP request
-    G->>G: TraceID → Logging → Errors → Recovery → Auth
+    G->>G: TraceID → Logging → Errors → Recovery → Auth → Workspace
     G->>H: typed request (scope: user, workspace)
     H->>S: call
     S->>R: call
@@ -155,8 +156,9 @@ Middleware order matters (outer to inner):
 3. **Errors** — converts the last error into **RFC 9457 Problem Details** (status from the error kind; 5xx never show internals).
 4. **Recovery** — turns panics into `Internal` errors with the stack trace (in the logs only).
 5. **Auth** — on non-public routes: bearer token → `Authenticator` → user resolved (created on first login) → `scope.WithUser`.
+6. **Workspace** — on routes with `{workspaceId}`: checks the membership (non-members get **404**, so existence is not revealed) → `scope.WithWorkspace` + `scope.WithWorkspaceRole`. From there the workspace reaches Row-Level Security.
 
-Then the generated wrapper calls the module's **strict handler**, which receives a typed request and returns a typed response or an error. A future **workspace middleware** will validate membership for `/workspaces/{workspaceId}/…` routes and set `scope.WithWorkspace` ([ADR-0017](adr/0017-workspace-in-url-path.md)).
+Then the generated wrapper calls the module's **strict handler**, which receives a typed request and returns a typed response or an error. Workspace handlers read the workspace and role from the scope, never from the request ([ADR-0017](adr/0017-workspace-in-url-path.md)).
 
 ## 7. API contract and code generation
 
@@ -183,30 +185,46 @@ Defense in depth, all in PostgreSQL ([ADR-0006](adr/0006-multi-tenancy-rls.md), 
 |---|---|
 | Roles | API connects as `nexo_api` (member of `nexo_app`), **not the table owner**; migrations run as the owner |
 | Scope | `TxManager` sets `app.user_id` / `app.workspace_id` per transaction; read by `nexo_user_id()` / `nexo_workspace_id()` |
-| Rows | Every tenant table: `ENABLE` + `FORCE ROW LEVEL SECURITY` and a policy on `workspace_id = nexo_workspace_id()` |
+| Rows | Every tenant table: `ENABLE ROW LEVEL SECURITY` (not `FORCE`, [ADR-0022](adr/0022-rls-without-force.md)) and a policy on `workspace_id = nexo_workspace_id()` |
 | Columns | Column privileges where RLS is not enough (e.g. users can edit only `name`, `avatar_url`) |
-| Privileged operations | Narrow `SECURITY DEFINER` functions (`nexo_resolve_user`, `nexo_bootstrap_superadmin`) with `search_path` pinned and `EXECUTE` granted only to `nexo_app` |
+| Privileged operations | Narrow `SECURITY DEFINER` functions (`nexo_resolve_user`, `nexo_bootstrap_superadmin`, `nexo_create_workspace`) with `search_path` pinned and `EXECUTE` granted only to `nexo_app` |
+| Invariants | Triggers for rules that must hold whatever the caller (a workspace always keeps one admin) |
 | Application | The Store also filters by workspace (belt and braces) |
 
 Mandatory for every tenant entity: integration tests proving another workspace cannot read, update or delete its rows — including queries with no `WHERE`.
 
-## 10. Authentication (summary)
+## 10. Workspaces and roles
+
+Module `internal/modules/workspace` ([ADR-0023](adr/0023-workspaces-and-roles.md)):
+
+| Action | Who | Endpoint |
+|---|---|---|
+| Create a workspace (creator becomes admin) | Any user | `POST /workspaces` |
+| List my workspaces, with my role | Any user | `GET /workspaces` |
+| See a workspace / its members | Members | `GET /workspaces/{id}`, `GET /workspaces/{id}/members` |
+| Rename | Admins | `PATCH /workspaces/{id}` |
+| Change a member's role | Admins | `PATCH /workspaces/{id}/members/{userId}` |
+| Remove a member / leave | Admins / oneself | `DELETE /workspaces/{id}/members/{userId}` |
+
+Every rule is checked twice: by the service (clear error codes) and by PostgreSQL (policies, column privileges and a trigger that keeps at least one admin). Integration tests prove the database enforces them on its own.
+
+## 11. Authentication (summary)
 
 Full guide: **[auth.md](auth.md)**.
 
 Firebase ID token → `Authenticator.VerifyToken` → `nexo_resolve_user` (just-in-time creation, linking pre-provisioned accounts only with a verified email) → user id in scope. `GET /me` returns the profile. The platform superadmin is provisioned by `internal/bootstrap` from `BOOTSTRAP_SUPERADMIN_EMAIL`.
 
-## 11. Errors
+## 12. Errors
 
 `platform/apperror` ([ADR-0009](adr/0009-errors-problem-details.md)):
 
 | Kind | HTTP | Typical codes |
 |---|---|---|
-| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND` |
+| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE` |
 | `UNAUTHENTICATED` | 401 | `MISSING_TOKEN`, `INVALID_TOKEN`, `EMAIL_REQUIRED` |
-| `FORBIDDEN` | 403 | `FORBIDDEN` (incl. RLS denials) |
+| `FORBIDDEN` | 403 | `FORBIDDEN` (incl. RLS denials), `WORKSPACE_ADMIN_REQUIRED` |
 | `NOT_FOUND` | 404 | `<RESOURCE>_NOT_FOUND`, `ROUTE_NOT_FOUND` |
-| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE` |
+| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN` |
 | `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE` |
 | `INTERNAL` | 500 | `INTERNAL_ERROR` |
 
@@ -225,14 +243,14 @@ Response example:
 }
 ```
 
-## 12. Logging and observability
+## 13. Logging and observability
 
 - `slog` JSON with Cloud Logging keys (`severity`, `message`) outside development; text in development.
 - `trace_id` is added automatically to every record logged with the request context.
 - One line per request (health checks at `DEBUG`). 4xx → `WARNING` without internals; 5xx → `ERROR` with `error_location` and `error_cause`.
 - Planned: OpenTelemetry tracing and metrics.
 
-## 13. Configuration
+## 14. Configuration
 
 Read from environment variables; a `.env` file is loaded in local development ([`.env.example`](../../.env.example)).
 
@@ -246,26 +264,26 @@ Read from environment variables; a `.env` file is loaded in local development ([
 | `FIREBASE_AUTH_EMULATOR_HOST` | — | Local and tests only; refused in production |
 | `BOOTSTRAP_SUPERADMIN_EMAIL` | — | Optional superadmin provisioning |
 
-## 14. Startup and shutdown
+## 15. Startup and shutdown
 
 `cmd/api/main.go` does only this: load config → create logger → connect to PostgreSQL → create the Firebase authenticator → `app.New` (wiring) → `app.Bootstrap` (idempotent tasks) → serve → on `SIGINT`/`SIGTERM`, graceful shutdown (15 s). The version is injected at build time (`-ldflags "-X main.version=…"`).
 
-## 15. Database migrations
+## 16. Database migrations
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, run as the table **owner** (`DB_URL` in the Makefile).
-- Current migrations: `00001` extensions, `00002` `nexo_app` role + RLS helper functions, `00003` users + provisioning functions.
+- Current migrations: `00001` extensions, `00002` `nexo_app` role + RLS helper functions, `00003` users + provisioning functions, `00004` RLS without `FORCE`, `00005` workspaces and memberships.
 - New tenant tables follow the template in [data-access.md](data-access.md#adding-a-tenant-table) (RLS, policy, indexes).
 
-## 16. Testing
+## 17. Testing
 
 | Level | Command | What |
 |---|---|---|
 | Unit | `make test` | Services with mockery mocks, router with fake adapters, `arch_test.go` |
 | Integration | `make test-integration` | PostgreSQL and the Firebase Auth emulator via testcontainers: Store, RLS, column privileges, user provisioning, Firebase adapter |
 
-Details and conventions in [ADR-0018](adr/0018-testing-strategy.md). Helpers: `pgtest` (database with API-role and owner pools) and `fbtest` (emulator, sign-up/sign-in, verify email).
+Details and conventions in [ADR-0018](adr/0018-testing-strategy.md). Helpers: `pgtest` (database with API-role and owner pools; the owner is **not** a superuser, like in a managed database) and `fbtest` (emulator, sign-up/sign-in, verify email).
 
-## 17. Local development
+## 18. Local development
 
 ```bash
 make up          # PostgreSQL (5433) + Firebase Auth emulator (9099, UI on 4000) + DB roles
@@ -277,11 +295,12 @@ make generate    # after changing the contract or an interface with mocks
 make lint
 ```
 
-## 18. What is next for the architecture
+## 19. What is next for the architecture
 
 | Item | Status | ADR |
 |---|---|---|
-| Workspaces, memberships and the workspace middleware | Next (milestone M0) | [0017](adr/0017-workspace-in-url-path.md) |
+| Workspaces, memberships and the workspace middleware | ✅ Done | [0017](adr/0017-workspace-in-url-path.md), [0023](adr/0023-workspaces-and-roles.md) |
+| Invitations (email and link), Mailer + Mailpit | Next (milestone M0) | — |
 | Commands, events and transactional outbox | Planned | [0015](adr/0015-commands-and-outbox.md) |
 | sqlc for custom queries | Planned | [0005](adr/0005-data-access-store.md) |
 | `internal/query` read models | Planned | [0002](adr/0002-modular-monolith.md) |

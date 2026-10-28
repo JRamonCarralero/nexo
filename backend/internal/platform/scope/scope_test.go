@@ -37,3 +37,8 @@ func TestNilIDsAreAbsent(t *testing.T) {
 	_, ok = scope.WorkspaceID(ctx)
 	assert.False(t, ok)
 }
+
+func TestWorkspaceRole(t *testing.T) {
+	assert.Empty(t, scope.WorkspaceRole(context.Background()))
+	assert.Equal(t, "admin", scope.WorkspaceRole(scope.WithWorkspaceRole(context.Background(), "admin")))
+}

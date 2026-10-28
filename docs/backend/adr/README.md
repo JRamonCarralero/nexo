@@ -11,7 +11,7 @@ An ADR records one significant decision: the context, what was decided, why, and
 | [0003](0003-contract-first-api.md) | Contract-first API with OpenAPI | Accepted | 2026-10-22 |
 | [0004](0004-postgresql.md) | PostgreSQL as the main database | Accepted | 2026-10-22 |
 | [0005](0005-data-access-store.md) | Technology-agnostic data access: generic Store plus custom queries | Accepted | 2026-10-22 |
-| [0006](0006-multi-tenancy-rls.md) | Multi-tenancy with a shared schema and Row-Level Security | Accepted | 2026-10-23 |
+| [0006](0006-multi-tenancy-rls.md) | Multi-tenancy with a shared schema and Row-Level Security | Accepted — amended by [ADR-0022](0022-rls-without-force.md) | 2026-10-23 |
 | [0007](0007-uuidv7-identifiers.md) | UUIDv7 identifiers generated in Go | Accepted | 2026-10-22 |
 | [0008](0008-cursor-pagination.md) | Cursor pagination by default | Accepted | 2026-10-22 |
 | [0009](0009-errors-problem-details.md) | Application errors and RFC 9457 Problem Details | Accepted | 2026-10-22 |
@@ -22,11 +22,13 @@ An ADR records one significant decision: the context, what was decided, why, and
 | [0014](0014-superadmin-bootstrap.md) | Platform superadmin bootstrap | Accepted | 2026-10-23 |
 | [0015](0015-commands-and-outbox.md) | Commands and events with a transactional outbox | Accepted (not implemented yet) | 2026-10-22 |
 | [0016](0016-custom-fields-jsonb.md) | Custom fields in JSONB | Accepted (not implemented yet) | 2026-10-22 |
-| [0017](0017-workspace-in-url-path.md) | Workspace in the URL path | Accepted (not implemented yet) | 2026-10-23 |
+| [0017](0017-workspace-in-url-path.md) | Workspace in the URL path | Accepted | 2026-10-23 |
 | [0018](0018-testing-strategy.md) | Testing strategy | Accepted | 2026-10-22 |
 | [0019](0019-migrations-goose.md) | SQL migrations with goose, embedded in the binary | Accepted | 2026-10-22 |
 | [0020](0020-local-environment.md) | Local environment with Docker Compose and emulators | Accepted | 2026-10-23 |
 | [0021](0021-realtime-signals.md) | Real time through Firestore signal documents | Accepted (not implemented yet) | 2026-10-22 |
+| [0022](0022-rls-without-force.md) | Row-Level Security without FORCE; the owner runs privileged functions | Accepted | 2026-10-28 |
+| [0023](0023-workspaces-and-roles.md) | Workspaces, memberships and roles | Accepted | 2026-10-28 |
 
 ## Writing a new ADR
 

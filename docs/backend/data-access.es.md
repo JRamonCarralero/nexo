@@ -87,6 +87,7 @@ El aislamiento entre espacios de trabajo no depende solo de que el código se ac
 - La API se conecta como **`nexo_api`**, miembro de **`nexo_app`**. **No es dueño** de las tablas (los dueños se saltan las políticas). Las migraciones se ejecutan con el dueño.
 - `nexo_user_id()` y `nexo_workspace_id()` devuelven el alcance de la transacción actual (`NULL` si no está fijado).
 - Cada tabla de un espacio de trabajo tiene una política que compara `workspace_id` con `nexo_workspace_id()`.
+- La RLS está **activada, no forzada**: el dueño (migraciones y funciones `SECURITY DEFINER`) debe saltársela ([ADR-0022](adr/0022-rls-without-force.es.md)). Un test falla si alguna tabla fuerza la RLS.
 
 La base de datos **falla de forma segura**: sin alcance, o fuera de una transacción, las tablas de espacios de trabajo no devuelven filas, y escribir una fila en otro espacio se rechaza con `FORBIDDEN`.
 
@@ -105,8 +106,7 @@ CREATE TABLE tasks (
 );
 CREATE INDEX tasks_workspace_idx ON tasks (workspace_id) WHERE deleted_at IS NULL;
 
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasks FORCE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY; -- Sin FORCE: el dueño debe seguir saltándose la RLS (ADR-0022).
 CREATE POLICY tenant_isolation ON tasks
     USING (workspace_id = nexo_workspace_id())
     WITH CHECK (workspace_id = nexo_workspace_id());
@@ -134,7 +134,8 @@ Después, añade los tests de aislamiento (obligatorios para toda entidad de esp
 testDB, err = pgtest.Start(ctx)
 
 // testDB.Pool      → conecta como nexo_api: aplica RLS, como en producción
-// testDB.OwnerPool → dueño de las tablas: preparar datos o inspeccionar filas saltándose RLS
+// testDB.OwnerPool → dueño de las tablas (nexo_owner, NO es superusuario, como en una
+//                    base de datos gestionada): preparar datos o inspeccionar filas saltándose RLS
 ```
 
 Mira [`store_integration_test.go`](../../backend/internal/platform/database/postgres/store_integration_test.go) para ver ejemplos, incluidos tests de RLS que ejecutan consultas sin ningún `WHERE`.

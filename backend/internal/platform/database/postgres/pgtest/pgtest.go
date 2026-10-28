@@ -29,12 +29,27 @@ const (
 	appPassword = "nexo_api"
 )
 
+// ownerUser owns the schema and runs the migrations. Like the owner role of a
+// managed database (Neon, Cloud SQL) it is NOT a superuser: superusers bypass
+// Row-Level Security, which would hide bugs that only show up in production.
+const (
+	ownerUser     = "nexo_owner"
+	ownerPassword = "nexo_owner"
+)
+
+const ownerSetup = `
+CREATE ROLE nexo_owner LOGIN PASSWORD 'nexo_owner' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+GRANT ALL ON DATABASE nexo_test TO nexo_owner;
+ALTER SCHEMA public OWNER TO nexo_owner;
+`
+
 // Database is a running, migrated test database.
 type Database struct {
 	// Pool connects as the API role: Row-Level Security applies, like in production.
 	Pool *pgxpool.Pool
-	// OwnerPool connects as the owner of the tables (bypasses RLS). Use it only
-	// to prepare fixtures or to inspect rows regardless of policies.
+	// OwnerPool connects as the owner of the tables, a non-superuser role (it
+	// bypasses RLS only because it owns the tables). Use it only to prepare
+	// fixtures or to inspect rows regardless of policies.
 	OwnerPool *pgxpool.Pool
 	container *tcpostgres.PostgresContainer
 }
@@ -63,35 +78,61 @@ func Start(ctx context.Context) (*Database, error) {
 }
 
 func setup(ctx context.Context, container *tcpostgres.PostgresContainer) (*Database, error) {
-	ownerURL, err := container.ConnectionString(ctx, "sslmode=disable")
+	adminURL, err := container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
+		return nil, err
+	}
+	if err := asAdmin(ctx, adminURL, db.LocalRoles, ownerSetup); err != nil {
+		return nil, err
+	}
+
+	ownerURL, err := withUser(adminURL, ownerUser, ownerPassword)
+	if err != nil {
+		return nil, err
+	}
+	if err := migrate(ownerURL); err != nil {
 		return nil, err
 	}
 	ownerPool, err := pgxpool.New(ctx, ownerURL)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := ownerPool.Exec(ctx, db.LocalRoles); err != nil {
-		ownerPool.Close()
-		return nil, fmt.Errorf("creating roles: %w", err)
-	}
-	if err := migrate(ownerURL); err != nil {
-		ownerPool.Close()
-		return nil, err
-	}
 
-	appURL, err := url.Parse(ownerURL)
+	appURL, err := withUser(adminURL, appUser, appPassword)
 	if err != nil {
 		ownerPool.Close()
 		return nil, err
 	}
-	appURL.User = url.UserPassword(appUser, appPassword)
-	pool, err := pgxpool.New(ctx, appURL.String())
+	pool, err := pgxpool.New(ctx, appURL)
 	if err != nil {
 		ownerPool.Close()
 		return nil, err
 	}
 	return &Database{Pool: pool, OwnerPool: ownerPool, container: container}, nil
+}
+
+// asAdmin runs setup SQL as the container superuser (roles, ownership).
+func asAdmin(ctx context.Context, adminURL string, scripts ...string) error {
+	admin, err := pgxpool.New(ctx, adminURL)
+	if err != nil {
+		return err
+	}
+	defer admin.Close()
+	for _, script := range scripts {
+		if _, err := admin.Exec(ctx, script); err != nil {
+			return fmt.Errorf("preparing database roles: %w", err)
+		}
+	}
+	return nil
+}
+
+func withUser(rawURL, user, password string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+	u.User = url.UserPassword(user, password)
+	return u.String(), nil
 }
 
 // Stop closes the pools and removes the container.

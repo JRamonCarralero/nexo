@@ -37,7 +37,7 @@ Los errores son respuestas `401` en formato Problem con el código `MISSING_TOKE
 
 Los usuarios son globales (no pertenecen a un espacio de trabajo): se unirán a los espacios mediante membresías. La tabla `users` está protegida con Row-Level Security:
 
-- Cada usuario **solo puede leer y editar su propia fila** (compartir un espacio de trabajo ampliará las lecturas).
+- Cada usuario puede **leer y editar su propia fila**, y **leer** el perfil de las personas con las que comparte un espacio de trabajo.
 - El rol de la API solo puede actualizar las **columnas del perfil** (`name`, `avatar_url`). La RLS filtra filas, no columnas: sin esta restricción por columnas, un usuario podría hacerse superadmin a sí mismo.
 - Los usuarios **nunca se insertan directamente**. Dos funciones `SECURITY DEFINER` (migración `00003`) son el único punto de entrada: operaciones acotadas y auditables que se ejecutan como dueño de la tabla.
 

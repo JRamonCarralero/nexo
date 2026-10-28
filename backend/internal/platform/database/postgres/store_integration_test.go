@@ -54,7 +54,6 @@ CREATE TABLE widgets (
     deleted_at   timestamptz
 );
 ALTER TABLE widgets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE widgets FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON widgets
     USING (workspace_id = nexo_workspace_id())
     WITH CHECK (workspace_id = nexo_workspace_id());

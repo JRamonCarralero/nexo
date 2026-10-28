@@ -2,7 +2,7 @@
 
 [English](0017-workspace-in-url-path.md) · **Español**
 
-- **Estado:** Aceptado (aún no implementado)
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-23
 
 ## Contexto

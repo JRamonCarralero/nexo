@@ -16,7 +16,23 @@
     "INVALID_REQUEST": "Los datos enviados no son válidos.",
     "UNAUTHENTICATED": "Tienes que iniciar sesión.",
     "FORBIDDEN": "No tienes permiso para hacer esto.",
-    "ROUTE_NOT_FOUND": "El recurso solicitado no existe."
+    "ROUTE_NOT_FOUND": "El recurso solicitado no existe.",
+    "MISSING_TOKEN": "Tienes que iniciar sesión.",
+    "INVALID_TOKEN": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+    "EMAIL_REQUIRED": "Tu cuenta necesita una dirección de email.",
+    "EMAIL_IN_USE": "Ese email ya pertenece a otra cuenta. Si es tuyo, verifícalo e inténtalo de nuevo.",
+    "USER_NOT_FOUND": "No se ha encontrado a esa persona.",
+    "INVALID_CURSOR": "La lista ha cambiado. Recarga la página.",
+    "INVALID_QUERY": "La consulta no es válida.",
+    "ALREADY_EXISTS": "Ya existe.",
+    "REFERENCE_NOT_FOUND": "Algo a lo que hace referencia ya no existe.",
+    "WORKSPACE_NOT_FOUND": "El espacio de trabajo no existe o no tienes acceso.",
+    "INVALID_WORKSPACE_ID": "El enlace del espacio de trabajo no es válido.",
+    "INVALID_WORKSPACE_NAME": "El nombre del espacio de trabajo debe tener entre 1 y 100 caracteres.",
+    "WORKSPACE_ADMIN_REQUIRED": "Solo los administradores del espacio pueden hacer esto.",
+    "MEMBER_NOT_FOUND": "Esa persona no es miembro de este espacio.",
+    "INVALID_ROLE": "El rol no es válido.",
+    "LAST_ADMIN": "Un espacio de trabajo necesita al menos un administrador. Nombra a otra persona administradora antes."
   },
   "traceId": "Código de seguimiento: {{traceId}}"
 }

@@ -16,7 +16,23 @@
     "INVALID_REQUEST": "The submitted data is not valid.",
     "UNAUTHENTICATED": "You need to sign in.",
     "FORBIDDEN": "You do not have permission to do this.",
-    "ROUTE_NOT_FOUND": "The requested resource does not exist."
+    "ROUTE_NOT_FOUND": "The requested resource does not exist.",
+    "MISSING_TOKEN": "You need to sign in.",
+    "INVALID_TOKEN": "Your session has expired. Please sign in again.",
+    "EMAIL_REQUIRED": "Your account needs an email address.",
+    "EMAIL_IN_USE": "That email belongs to another account. If it is yours, verify it and try again.",
+    "USER_NOT_FOUND": "That person was not found.",
+    "INVALID_CURSOR": "The list has changed. Please reload the page.",
+    "INVALID_QUERY": "The query is not valid.",
+    "ALREADY_EXISTS": "It already exists.",
+    "REFERENCE_NOT_FOUND": "Something it refers to no longer exists.",
+    "WORKSPACE_NOT_FOUND": "The workspace does not exist or you do not have access.",
+    "INVALID_WORKSPACE_ID": "The workspace link is not valid.",
+    "INVALID_WORKSPACE_NAME": "The workspace name must be between 1 and 100 characters.",
+    "WORKSPACE_ADMIN_REQUIRED": "Only workspace admins can do this.",
+    "MEMBER_NOT_FOUND": "That person is not a member of this workspace.",
+    "INVALID_ROLE": "The role is not valid.",
+    "LAST_ADMIN": "A workspace needs at least one admin. Make someone else an admin first."
   },
   "traceId": "Trace code: {{traceId}}"
 }

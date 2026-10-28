@@ -2,7 +2,7 @@
 
 [English](0006-multi-tenancy-rls.md) · **Español**
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado — modificado por el [ADR-0022](0022-rls-without-force.es.md)
 - **Fecha:** 2026-10-23
 
 ## Contexto

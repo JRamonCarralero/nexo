@@ -11,3 +11,7 @@ packages:
   github.com/JRamonCarralero/nexo/backend/internal/modules/user:
     interfaces:
       Repository: {}
+  github.com/JRamonCarralero/nexo/backend/internal/modules/workspace:
+    interfaces:
+      Repository: {}
+      UserDirectory: {}
