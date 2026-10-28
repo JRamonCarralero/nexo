@@ -18,6 +18,8 @@ tags:
     description: Estado del servicio
   - name: users
     description: Usuarios y sesión
+  - name: workspaces
+    description: Espacios de trabajo y sus miembros
 paths:
   /health:
     get:
@@ -55,7 +57,168 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /workspaces:
+    get:
+      operationId: listWorkspaces
+      tags: [workspaces]
+      summary: Espacios de trabajo del usuario
+      description: Todos los espacios a los que pertenece el usuario autenticado, ordenados por nombre, con su rol en cada uno.
+      responses:
+        "200":
+          description: Espacios de trabajo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceList"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createWorkspace
+      tags: [workspaces]
+      summary: Crear un espacio de trabajo
+      description: Quien lo crea pasa a ser su primer administrador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceInput"
+      responses:
+        "201":
+          description: Espacio creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /workspaces/{workspaceId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: getWorkspace
+      tags: [workspaces]
+      summary: Un espacio de trabajo
+      responses:
+        "200":
+          description: Espacio de trabajo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    patch:
+      operationId: updateWorkspace
+      tags: [workspaces]
+      summary: Renombrar un espacio de trabajo
+      description: Solo administradores.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceInput"
+      responses:
+        "200":
+          description: Espacio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /workspaces/{workspaceId}/members:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listMembers
+      tags: [workspaces]
+      summary: Miembros de un espacio de trabajo
+      responses:
+        "200":
+          description: Miembros, por orden de incorporación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberList"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /workspaces/{workspaceId}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateMember
+      tags: [workspaces]
+      summary: Cambiar el rol de un miembro
+      description: Solo administradores. Un espacio siempre conserva al menos un administrador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdate"
+      responses:
+        "200":
+          description: Miembro actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: removeMember
+      tags: [workspaces]
+      summary: Quitar un miembro o abandonar el espacio
+      description: Los administradores pueden quitar a cualquiera; cualquier miembro puede quitarse a sí mismo. Un espacio siempre conserva al menos un administrador.
+      responses:
+        "204":
+          description: Miembro quitado
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      description: El usuario debe ser miembro; si no lo es, la respuesta es 404.
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http
@@ -109,6 +272,77 @@ components:
         createdAt:
           type: string
           format: date-time
+    Role:
+      type: string
+      enum: [admin, member, guest]
+      description: |
+        Rol en un espacio de trabajo. `admin` gestiona el espacio, sus miembros e
+        invitaciones; `member` trabaja en él; `guest` es un colaborador externo
+        (sus restricciones llegarán con los proyectos).
+    WorkspaceInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Equipo de producto
+    Workspace:
+      type: object
+      required: [id, name, myRole, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        myRole:
+          $ref: "#/components/schemas/Role"
+        createdAt:
+          type: string
+          format: date-time
+    WorkspaceList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workspace"
+    Member:
+      type: object
+      required: [userId, email, name, avatarUrl, role, joinedAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        joinedAt:
+          type: string
+          format: date-time
+    MemberList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+    MemberUpdate:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/Role"
     Problem:
       type: object
       description: Error según RFC 9457. `code` es estable y legible por máquina; el frontend lo usa para traducir el mensaje.

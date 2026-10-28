@@ -7,17 +7,17 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { FieldError } from './fieldError';
+import type { FieldError } from './fieldError'
 
 /**
  * Error según RFC 9457. `code` es estable y legible por máquina; el frontend lo usa para traducir el mensaje.
  */
 export interface Problem {
-  type?: string;
-  title: string;
-  status: number;
-  code: string;
-  detail?: string;
-  traceId: string;
-  errors?: FieldError[];
+  type?: string
+  title: string
+  status: number
+  code: string
+  detail?: string
+  traceId: string
+  errors?: FieldError[]
 }

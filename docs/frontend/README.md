@@ -162,7 +162,7 @@ ESLint enforces the boundaries:
 
 - importing `firebase` outside `src/shared/platform/**` is an **error**;
 - importing a feature's internals (`@/features/x/y`) instead of its public `index.ts` is an **error**;
-- generated files are excluded from lint and formatting.
+- generated files are excluded from lint; the API client is formatted with Prettier right after generation (orval hook), so contract changes produce clean diffs.
 
 ## 11. Configuration
 

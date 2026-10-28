@@ -9,12 +9,12 @@
  */
 
 export interface User {
-  id: string;
-  email: string;
-  emailVerified: boolean;
-  name: string;
-  avatarUrl: string;
+  id: string
+  email: string
+  emailVerified: boolean
+  name: string
+  avatarUrl: string
   /** Administrador de la plataforma (no de un espacio de trabajo). */
-  isSuperadmin: boolean;
-  createdAt: string;
+  isSuperadmin: boolean
+  createdAt: string
 }

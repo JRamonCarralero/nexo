@@ -44,7 +44,7 @@ type env struct {
 
 func newEnv(t *testing.T) env {
 	t.Helper()
-	_, err := testDB.OwnerPool.Exec(context.Background(), `TRUNCATE users`)
+	_, err := testDB.OwnerPool.Exec(context.Background(), `TRUNCATE users CASCADE`)
 	require.NoError(t, err)
 	tm := postgres.NewTxManager(testDB.Pool)
 	repo := user.NewPostgresRepository(tm)

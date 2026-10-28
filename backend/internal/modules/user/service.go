@@ -54,6 +54,12 @@ func (s *Service) Me(ctx context.Context) (User, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
+// GetByIDs returns the users the acting user can see among ids: themselves
+// and people they share a workspace with. Others are silently skipped.
+func (s *Service) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]User, error) {
+	return s.repo.GetByIDs(ctx, ids)
+}
+
 // EnsureSuperadmin makes sure the platform has a superadmin with that email.
 func (s *Service) EnsureSuperadmin(ctx context.Context, email string) (BootstrapResult, error) {
 	email = strings.TrimSpace(email)

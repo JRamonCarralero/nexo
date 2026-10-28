@@ -2,7 +2,7 @@
 
 **English** · [Español](0017-workspace-in-url-path.es.md)
 
-- **Status:** Accepted (not implemented yet)
+- **Status:** Accepted
 - **Date:** 2026-10-23
 
 ## Context

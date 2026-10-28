@@ -58,7 +58,8 @@ backend/
 │   │   └── api/                Código generado desde api/openapi.yaml (no se edita)
 │   ├── modules/                Módulos de negocio (una carpeta por dominio)
 │   │   ├── system/             Health check
-│   │   └── user/               Usuarios y perfil del usuario autenticado
+│   │   ├── user/               Usuarios y perfil del usuario autenticado
+│   │   └── workspace/          Espacios de trabajo, membresías y roles
 │   └── platform/               Infraestructura, sin conocimiento del negocio
 │       ├── apperror/           Tipo de error de la aplicación
 │       ├── auth/               Interfaz Authenticator (+ adaptador firebase/)
@@ -136,7 +137,7 @@ sequenceDiagram
     participant R as Repositorio / Store
     participant DB as PostgreSQL
     C->>G: petición HTTP
-    G->>G: TraceID → Logging → Errors → Recovery → Auth
+    G->>G: TraceID → Logging → Errors → Recovery → Auth → Workspace
     G->>H: petición tipada (alcance: usuario, espacio)
     H->>S: llamada
     S->>R: llamada
@@ -155,8 +156,9 @@ El orden de los middlewares importa (de fuera hacia dentro):
 3. **Errors**: convierte el último error en **Problem Details (RFC 9457)** (el estado sale del tipo de error; los 5xx nunca muestran detalles internos).
 4. **Recovery**: convierte los pánicos en errores `Internal` con la traza (solo en los logs).
 5. **Auth**: en las rutas no públicas, token bearer → `Authenticator` → resolución del usuario (se crea en el primer login) → `scope.WithUser`.
+6. **Workspace**: en las rutas con `{workspaceId}`, comprueba la membresía (quien no es miembro recibe **404**, para no revelar que el espacio existe) → `scope.WithWorkspace` + `scope.WithWorkspaceRole`. A partir de ahí el espacio llega a la Row-Level Security.
 
-Después, el envoltorio generado llama al **handler estricto** del módulo, que recibe una petición tipada y devuelve una respuesta tipada o un error. Un futuro **middleware de espacio de trabajo** validará la membresía en las rutas `/workspaces/{workspaceId}/…` y fijará `scope.WithWorkspace` ([ADR-0017](adr/0017-workspace-in-url-path.es.md)).
+Después, el envoltorio generado llama al **handler estricto** del módulo, que recibe una petición tipada y devuelve una respuesta tipada o un error. Los handlers de espacios de trabajo leen el espacio y el rol del alcance, nunca de la petición ([ADR-0017](adr/0017-workspace-in-url-path.es.md)).
 
 ## 7. Contrato de la API y generación de código
 
@@ -183,30 +185,46 @@ Defensa en profundidad, toda en PostgreSQL ([ADR-0006](adr/0006-multi-tenancy-rl
 |---|---|
 | Roles | La API se conecta como `nexo_api` (miembro de `nexo_app`), **que no es dueño de las tablas**; las migraciones se ejecutan con el dueño |
 | Alcance | `TxManager` fija `app.user_id` / `app.workspace_id` en cada transacción; los leen `nexo_user_id()` / `nexo_workspace_id()` |
-| Filas | Cada tabla de espacio de trabajo: `ENABLE` + `FORCE ROW LEVEL SECURITY` y una política sobre `workspace_id = nexo_workspace_id()` |
+| Filas | Cada tabla de espacio de trabajo: `ENABLE ROW LEVEL SECURITY` (sin `FORCE`, [ADR-0022](adr/0022-rls-without-force.es.md)) y una política sobre `workspace_id = nexo_workspace_id()` |
 | Columnas | Permisos por columna donde la RLS no basta (p. ej. los usuarios solo pueden editar `name` y `avatar_url`) |
-| Operaciones privilegiadas | Funciones `SECURITY DEFINER` acotadas (`nexo_resolve_user`, `nexo_bootstrap_superadmin`) con `search_path` fijado y `EXECUTE` concedido solo a `nexo_app` |
+| Operaciones privilegiadas | Funciones `SECURITY DEFINER` acotadas (`nexo_resolve_user`, `nexo_bootstrap_superadmin`, `nexo_create_workspace`) con `search_path` fijado y `EXECUTE` concedido solo a `nexo_app` |
+| Invariantes | Triggers para las reglas que deben cumplirse llame quien llame (un espacio siempre conserva un admin) |
 | Aplicación | El Store también filtra por espacio de trabajo (doble protección) |
 
 Obligatorio para toda entidad de espacio de trabajo: tests de integración que demuestren que otro espacio no puede leer, modificar ni borrar sus filas, incluidas consultas sin ningún `WHERE`.
 
-## 10. Autenticación (resumen)
+## 10. Espacios de trabajo y roles
+
+Módulo `internal/modules/workspace` ([ADR-0023](adr/0023-workspaces-and-roles.es.md)):
+
+| Acción | Quién | Endpoint |
+|---|---|---|
+| Crear un espacio (quien lo crea pasa a ser admin) | Cualquier usuario | `POST /workspaces` |
+| Listar mis espacios, con mi rol | Cualquier usuario | `GET /workspaces` |
+| Ver un espacio / sus miembros | Miembros | `GET /workspaces/{id}`, `GET /workspaces/{id}/members` |
+| Renombrar | Admins | `PATCH /workspaces/{id}` |
+| Cambiar el rol de un miembro | Admins | `PATCH /workspaces/{id}/members/{userId}` |
+| Quitar a un miembro / salir | Admins / uno mismo | `DELETE /workspaces/{id}/members/{userId}` |
+
+Cada regla se comprueba dos veces: en el servicio (códigos de error claros) y en PostgreSQL (políticas, permisos por columna y un trigger que conserva al menos un admin). Los tests de integración demuestran que la base de datos las aplica por sí sola.
+
+## 11. Autenticación (resumen)
 
 Guía completa: **[auth.es.md](auth.es.md)**.
 
 ID token de Firebase → `Authenticator.VerifyToken` → `nexo_resolve_user` (alta automática; las cuentas preparadas solo se vinculan con el email verificado) → id del usuario en el alcance. `GET /me` devuelve el perfil. El superadmin de la plataforma lo crea `internal/bootstrap` a partir de `BOOTSTRAP_SUPERADMIN_EMAIL`.
 
-## 11. Errores
+## 12. Errores
 
 `platform/apperror` ([ADR-0009](adr/0009-errors-problem-details.es.md)):
 
 | Tipo | HTTP | Códigos habituales |
 |---|---|---|
-| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND` |
+| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE` |
 | `UNAUTHENTICATED` | 401 | `MISSING_TOKEN`, `INVALID_TOKEN`, `EMAIL_REQUIRED` |
-| `FORBIDDEN` | 403 | `FORBIDDEN` (incluye rechazos de la RLS) |
+| `FORBIDDEN` | 403 | `FORBIDDEN` (incluye rechazos de la RLS), `WORKSPACE_ADMIN_REQUIRED` |
 | `NOT_FOUND` | 404 | `<RECURSO>_NOT_FOUND`, `ROUTE_NOT_FOUND` |
-| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE` |
+| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN` |
 | `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE` |
 | `INTERNAL` | 500 | `INTERNAL_ERROR` |
 
@@ -225,14 +243,14 @@ Ejemplo de respuesta:
 }
 ```
 
-## 12. Logs y observabilidad
+## 13. Logs y observabilidad
 
 - `slog` en JSON con los campos de Cloud Logging (`severity`, `message`) fuera de desarrollo; texto en desarrollo.
 - `trace_id` se añade automáticamente a todo log escrito con el contexto de la petición.
 - Una línea por petición (el health check en `DEBUG`). 4xx → `WARNING` sin detalles internos; 5xx → `ERROR` con `error_location` y `error_cause`.
 - Previsto: trazas y métricas con OpenTelemetry.
 
-## 13. Configuración
+## 14. Configuración
 
 Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` ([`.env.example`](../../.env.example)).
 
@@ -246,26 +264,26 @@ Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` (
 | `FIREBASE_AUTH_EMULATOR_HOST` | — | Solo en local y en tests; se rechaza en producción |
 | `BOOTSTRAP_SUPERADMIN_EMAIL` | — | Alta opcional del superadmin |
 
-## 14. Arranque y apagado
+## 15. Arranque y apagado
 
 `cmd/api/main.go` solo hace esto: cargar la configuración → crear el logger → conectar con PostgreSQL → crear el autenticador de Firebase → `app.New` (montaje) → `app.Bootstrap` (tareas idempotentes) → servir → ante `SIGINT`/`SIGTERM`, apagado ordenado (15 s). La versión se inyecta al compilar (`-ldflags "-X main.version=…"`).
 
-## 15. Migraciones de la base de datos
+## 16. Migraciones de la base de datos
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, ejecutadas con el **dueño** de las tablas (`DB_URL` en el Makefile).
-- Migraciones actuales: `00001` extensiones, `00002` rol `nexo_app` + funciones auxiliares de la RLS, `00003` usuarios + funciones de alta.
+- Migraciones actuales: `00001` extensiones, `00002` rol `nexo_app` + funciones auxiliares de la RLS, `00003` usuarios + funciones de alta, `00004` RLS sin `FORCE`, `00005` espacios de trabajo y membresías.
 - Las tablas nuevas de espacio de trabajo siguen la plantilla de [data-access.es.md](data-access.es.md#añadir-una-tabla-de-espacio-de-trabajo) (RLS, política, índices).
 
-## 16. Tests
+## 17. Tests
 
 | Nivel | Comando | Qué |
 |---|---|---|
 | Unitarios | `make test` | Servicios con mocks de mockery, router con adaptadores falsos, `arch_test.go` |
 | Integración | `make test-integration` | PostgreSQL y el emulador de Firebase Auth con testcontainers: Store, RLS, permisos por columna, alta de usuarios y adaptador de Firebase |
 
-Detalles y convenciones en el [ADR-0018](adr/0018-testing-strategy.es.md). Utilidades: `pgtest` (base de datos con conexiones del rol de la API y del dueño) y `fbtest` (emulador, registro, inicio de sesión y verificación de email).
+Detalles y convenciones en el [ADR-0018](adr/0018-testing-strategy.es.md). Utilidades: `pgtest` (base de datos con conexiones del rol de la API y del dueño; el dueño **no** es superusuario, como en una base de datos gestionada) y `fbtest` (emulador, registro, inicio de sesión y verificación de email).
 
-## 17. Desarrollo local
+## 18. Desarrollo local
 
 ```bash
 make up          # PostgreSQL (5433) + emulador de Firebase Auth (9099, interfaz en 4000) + roles de BD
@@ -277,11 +295,12 @@ make generate    # tras cambiar el contrato o una interfaz con mocks
 make lint
 ```
 
-## 18. Próximos pasos de la arquitectura
+## 19. Próximos pasos de la arquitectura
 
 | Elemento | Estado | ADR |
 |---|---|---|
-| Espacios de trabajo, membresías y middleware de espacio | Siguiente (hito M0) | [0017](adr/0017-workspace-in-url-path.es.md) |
+| Espacios de trabajo, membresías y middleware de espacio | ✅ Hecho | [0017](adr/0017-workspace-in-url-path.es.md), [0023](adr/0023-workspaces-and-roles.es.md) |
+| Invitaciones (email y enlace), Mailer + Mailpit | Siguiente (hito M0) | — |
 | Comandos, eventos y outbox transaccional | Previsto | [0015](adr/0015-commands-and-outbox.es.md) |
 | sqlc para las consultas a medida | Previsto | [0005](adr/0005-data-access-store.es.md) |
 | Modelos de lectura en `internal/query` | Previsto | [0002](adr/0002-modular-monolith.es.md) |

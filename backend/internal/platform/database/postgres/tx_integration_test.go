@@ -144,3 +144,29 @@ func TestAPIRoleIsNotTableOwner(t *testing.T) {
 	assert.Equal(t, "nexo_api", current)
 	assert.NotEqual(t, owner, current, "the API role must not own tables, or RLS would not apply")
 }
+
+// The owner must not be a superuser: superusers bypass RLS and would hide
+// bugs that only appear in managed databases (ADR-0022).
+func TestTestOwnerIsNotSuperuser(t *testing.T) {
+	var super bool
+	require.NoError(t, testDB.OwnerPool.QueryRow(context.Background(),
+		`SELECT rolsuper FROM pg_roles WHERE rolname = current_user`).Scan(&super))
+	assert.False(t, super)
+}
+
+// FORCE ROW LEVEL SECURITY would subject the owner (and therefore the
+// SECURITY DEFINER functions) to the policies (ADR-0022).
+func TestNoTableForcesRowLevelSecurity(t *testing.T) {
+	rows, err := testDB.OwnerPool.Query(context.Background(),
+		`SELECT relname FROM pg_class
+		  WHERE relnamespace = 'public'::regnamespace AND relkind = 'r' AND relforcerowsecurity`)
+	require.NoError(t, err)
+	var forced []string
+	for rows.Next() {
+		var name string
+		require.NoError(t, rows.Scan(&name))
+		forced = append(forced, name)
+	}
+	require.NoError(t, rows.Err())
+	assert.Empty(t, forced, "use ENABLE ROW LEVEL SECURITY without FORCE")
+}

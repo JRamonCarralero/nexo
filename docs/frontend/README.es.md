@@ -162,7 +162,7 @@ ESLint hace cumplir las fronteras:
 
 - importar `firebase` fuera de `src/shared/platform/**` es un **error**;
 - importar las partes internas de una funcionalidad (`@/features/x/y`) en lugar de su `index.ts` es un **error**;
-- los ficheros generados quedan fuera del lint y del formato.
+- los ficheros generados quedan fuera del lint; el cliente de la API se formatea con Prettier justo después de generarlo (hook de orval), para que los cambios de contrato den diferencias limpias.
 
 ## 11. Configuración
 

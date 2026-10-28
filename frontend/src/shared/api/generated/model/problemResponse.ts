@@ -7,9 +7,9 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { Problem } from './problem';
+import type { Problem } from './problem'
 
 /**
  * Error (RFC 9457 Problem Details)
  */
-export type ProblemResponse = Problem;
+export type ProblemResponse = Problem

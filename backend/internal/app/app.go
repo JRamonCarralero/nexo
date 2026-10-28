@@ -13,6 +13,7 @@ import (
 	"github.com/JRamonCarralero/nexo/backend/internal/httpserver"
 	"github.com/JRamonCarralero/nexo/backend/internal/modules/system"
 	"github.com/JRamonCarralero/nexo/backend/internal/modules/user"
+	"github.com/JRamonCarralero/nexo/backend/internal/modules/workspace"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/auth"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/config"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
@@ -38,12 +39,14 @@ func New(d Deps) (*App, error) {
 	tm := postgres.NewTxManager(d.DB)
 
 	users := user.NewService(user.NewPostgresRepository(tm))
+	workspaces := workspace.NewService(workspace.NewPostgresRepository(tm), userDirectory{users})
 
 	router, err := httpserver.NewRouter(
-		httpserver.Deps{Logger: d.Logger, Authenticator: d.Authenticator, Users: users},
+		httpserver.Deps{Logger: d.Logger, Authenticator: d.Authenticator, Users: users, Workspaces: workspaces},
 		httpserver.Handlers{
-			System: system.NewHandler(d.DB, d.Version),
-			User:   user.NewHandler(users),
+			System:    system.NewHandler(d.DB, d.Version),
+			User:      user.NewHandler(users),
+			Workspace: workspace.NewHandler(workspaces),
 		},
 	)
 	if err != nil {

@@ -87,6 +87,7 @@ Isolation between workspaces does not depend only on the code remembering to fil
 - The API connects as **`nexo_api`**, member of **`nexo_app`**. It is **not the owner** of the tables (owners bypass RLS). Migrations run as the owner.
 - `nexo_user_id()` and `nexo_workspace_id()` return the scope of the current transaction (`NULL` when not set).
 - Every tenant table has a policy comparing `workspace_id` with `nexo_workspace_id()`.
+- RLS is **enabled, not forced**: the owner (migrations and `SECURITY DEFINER` functions) must bypass it ([ADR-0022](adr/0022-rls-without-force.md)). A test fails if any table forces RLS.
 
 The database **fails closed**: without a scope, or outside a transaction, tenant tables return no rows, and writing a row into another workspace is rejected with `FORBIDDEN`.
 
@@ -105,8 +106,7 @@ CREATE TABLE tasks (
 );
 CREATE INDEX tasks_workspace_idx ON tasks (workspace_id) WHERE deleted_at IS NULL;
 
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasks FORCE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY; -- Not FORCE: the owner must keep bypassing RLS (ADR-0022).
 CREATE POLICY tenant_isolation ON tasks
     USING (workspace_id = nexo_workspace_id())
     WITH CHECK (workspace_id = nexo_workspace_id());
@@ -134,7 +134,8 @@ Then add the isolation tests (mandatory for every tenant entity): another worksp
 testDB, err = pgtest.Start(ctx)
 
 // testDB.Pool      → connects as nexo_api: RLS applies, like production
-// testDB.OwnerPool → table owner: create fixtures or inspect rows bypassing RLS
+// testDB.OwnerPool → table owner (nexo_owner, NOT a superuser, like a managed
+//                    database): create fixtures or inspect rows bypassing RLS
 ```
 
 See [`store_integration_test.go`](../../backend/internal/platform/database/postgres/store_integration_test.go) for examples, including RLS tests that run queries with no `WHERE` at all.

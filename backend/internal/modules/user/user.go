@@ -43,6 +43,8 @@ type Repository interface {
 	Resolve(ctx context.Context, newID uuid.UUID, id auth.Identity) (uuid.UUID, error)
 	// GetByID returns a user visible to the acting user.
 	GetByID(ctx context.Context, id uuid.UUID) (User, error)
+	// GetByIDs returns the users visible to the acting user among ids (others are skipped).
+	GetByIDs(ctx context.Context, ids []uuid.UUID) ([]User, error)
 	// EnsureSuperadmin makes sure the platform has a superadmin.
 	EnsureSuperadmin(ctx context.Context, newID uuid.UUID, email string) (BootstrapResult, error)
 }

@@ -7,11 +7,11 @@
  *
  * OpenAPI spec version: 0.1.0
  */
-import type { HealthChecks } from './healthChecks';
-import type { HealthStatus } from './healthStatus';
+import type { HealthChecks } from './healthChecks'
+import type { HealthStatus } from './healthStatus'
 
 export interface Health {
-  status: HealthStatus;
-  version: string;
-  checks: HealthChecks;
+  status: HealthStatus
+  version: string
+  checks: HealthChecks
 }

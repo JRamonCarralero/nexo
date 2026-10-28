@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ import (
 	"github.com/JRamonCarralero/nexo/backend/internal/httpserver/api"
 	"github.com/JRamonCarralero/nexo/backend/internal/modules/system"
 	"github.com/JRamonCarralero/nexo/backend/internal/modules/user"
+	"github.com/JRamonCarralero/nexo/backend/internal/modules/workspace"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/apperror"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/auth"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/logger"
@@ -61,8 +63,38 @@ func (fakeUsers) GetByID(ctx context.Context, id uuid.UUID) (user.User, error) {
 	return u, nil
 }
 
+func (fakeUsers) GetByIDs(context.Context, []uuid.UUID) ([]user.User, error) { return nil, nil }
+
 func (fakeUsers) EnsureSuperadmin(context.Context, uuid.UUID, string) (user.BootstrapResult, error) {
 	return user.BootstrapExists, nil
+}
+
+// testWorkspaceID is the only workspace testUserID belongs to (as a member).
+var testWorkspaceID = uuid.MustParse("0192f7a4-0000-7000-8000-0000000000aa")
+
+// fakeWorkspaces is a workspace repository with a single workspace.
+type fakeWorkspaces struct{ workspace.Repository }
+
+func (fakeWorkspaces) RoleOf(_ context.Context, ws, u uuid.UUID) (workspace.Role, error) {
+	if ws == testWorkspaceID && u == testUserID {
+		return workspace.RoleMember, nil
+	}
+	return "", apperror.NotFound("workspace", ws)
+}
+
+func (fakeWorkspaces) GetByID(ctx context.Context, id uuid.UUID) (workspace.Workspace, error) {
+	if scoped, ok := scope.WorkspaceID(ctx); !ok || scoped != id {
+		return workspace.Workspace{}, apperror.NotFound("workspace", id)
+	}
+	w := workspace.Workspace{Name: "Product team"}
+	w.ID = id
+	return w, nil
+}
+
+type noDirectory struct{}
+
+func (noDirectory) Profiles(context.Context, []uuid.UUID) (map[uuid.UUID]workspace.UserProfile, error) {
+	return nil, nil
 }
 
 func newRouter(t *testing.T, pingErr error) (*gin.Engine, *bytes.Buffer) {
@@ -70,11 +102,18 @@ func newRouter(t *testing.T, pingErr error) (*gin.Engine, *bytes.Buffer) {
 	gin.SetMode(gin.TestMode)
 	var logs bytes.Buffer
 	users := user.NewService(fakeUsers{})
+	workspaces := workspace.NewService(fakeWorkspaces{}, noDirectory{})
 	r, err := httpserver.NewRouter(
-		httpserver.Deps{Logger: logger.New(&logs, "test", slog.LevelDebug), Authenticator: fakeAuthn{}, Users: users},
+		httpserver.Deps{
+			Logger:        logger.New(&logs, "test", slog.LevelDebug),
+			Authenticator: fakeAuthn{},
+			Users:         users,
+			Workspaces:    workspaces,
+		},
 		httpserver.Handlers{
-			System: system.NewHandler(fakePinger{err: pingErr}, "test"),
-			User:   user.NewHandler(users),
+			System:    system.NewHandler(fakePinger{err: pingErr}, "test"),
+			User:      user.NewHandler(users),
+			Workspace: workspace.NewHandler(workspaces),
 		},
 	)
 	require.NoError(t, err)
@@ -209,4 +248,56 @@ func TestPublicRoutesNeedNoToken(t *testing.T) {
 	r, _ := newRouter(t, nil)
 
 	assert.Equal(t, http.StatusOK, do(r, http.MethodGet, "/api/v1/health", nil).Code)
+}
+
+func TestWorkspaceRoutesPutTheWorkspaceAndRoleInScope(t *testing.T) {
+	r, _ := newRouter(t, nil)
+
+	rec := do(r, http.MethodGet, "/api/v1/workspaces/"+testWorkspaceID.String(), withToken)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	var w api.Workspace
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&w))
+	assert.Equal(t, testWorkspaceID, w.Id)
+	assert.Equal(t, api.RoleMember, w.MyRole)
+}
+
+func TestNonMembersGetNotFound(t *testing.T) {
+	r, _ := newRouter(t, nil)
+
+	rec := do(r, http.MethodGet, "/api/v1/workspaces/"+uuid.NewString(), withToken)
+
+	require.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, "WORKSPACE_NOT_FOUND", decodeProblem(t, rec.Body).Code)
+}
+
+func TestMalformedWorkspaceIDIsRejected(t *testing.T) {
+	r, _ := newRouter(t, nil)
+
+	rec := do(r, http.MethodGet, "/api/v1/workspaces/not-a-uuid", withToken)
+
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Equal(t, "INVALID_WORKSPACE_ID", decodeProblem(t, rec.Body).Code)
+}
+
+func TestWorkspaceRoutesCheckAuthenticationFirst(t *testing.T) {
+	r, _ := newRouter(t, nil)
+
+	rec := do(r, http.MethodGet, "/api/v1/workspaces/"+testWorkspaceID.String(), nil)
+
+	require.Equal(t, http.StatusUnauthorized, rec.Code)
+}
+
+func TestMembersCannotRenameTheWorkspace(t *testing.T) {
+	r, _ := newRouter(t, nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPatch,
+		"/api/v1/workspaces/"+testWorkspaceID.String(), strings.NewReader(`{"name":"Nuevo"}`))
+	req.Header.Set("Authorization", "Bearer "+validToken)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, "WORKSPACE_ADMIN_REQUIRED", decodeProblem(t, rec.Body).Code)
 }

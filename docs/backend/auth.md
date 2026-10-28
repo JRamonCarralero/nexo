@@ -37,7 +37,7 @@ Errors are `401` Problem responses with code `MISSING_TOKEN`, `INVALID_TOKEN` or
 
 Users are global (not tied to a workspace): they will join workspaces through memberships. The `users` table is protected by Row-Level Security:
 
-- A user can **read and edit only their own row** (sharing a workspace will widen reads).
+- A user can **read and edit their own row**, and **read** the profile of people they share a workspace with.
 - The API role can only update **profile columns** (`name`, `avatar_url`). RLS filters rows, not columns: without this column restriction a user could make themselves superadmin.
 - Users are **never inserted directly**. Two `SECURITY DEFINER` functions (migration `00003`) are the only entry points: narrow, auditable operations that run as the table owner.
 

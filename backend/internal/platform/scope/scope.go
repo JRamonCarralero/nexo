@@ -13,6 +13,7 @@ import (
 type (
 	userKey      struct{}
 	workspaceKey struct{}
+	roleKey      struct{}
 )
 
 // WithUser returns a context acting on behalf of the given user.
@@ -35,4 +36,16 @@ func WithWorkspace(ctx context.Context, workspaceID uuid.UUID) context.Context {
 func WorkspaceID(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(workspaceKey{}).(uuid.UUID)
 	return id, ok && id != uuid.Nil
+}
+
+// WithWorkspaceRole records the acting user's role in the current workspace
+// (set by the workspace middleware after checking the membership).
+func WithWorkspaceRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, roleKey{}, role)
+}
+
+// WorkspaceRole returns the acting user's role in the current workspace, or "".
+func WorkspaceRole(ctx context.Context) string {
+	role, _ := ctx.Value(roleKey{}).(string)
+	return role
 }

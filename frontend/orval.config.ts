@@ -19,5 +19,8 @@ export default defineConfig({
         fetch: { includeHttpResponseReturnType: false },
       },
     },
+    // orval's templates leave runs of blank lines: format the output like the
+    // rest of the code so contract changes produce clean diffs.
+    hooks: { afterAllFilesWrite: 'prettier --write' },
   },
 })

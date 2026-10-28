@@ -45,6 +45,25 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (User, e
 	return r.users.GetByID(ctx, id)
 }
 
+func (r *PostgresRepository) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var all []User
+	q := database.Query{Filters: []database.Filter{database.In("id", ids)}, Limit: database.MaxLimit}
+	for {
+		page, err := r.users.List(ctx, q)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, page.Items...)
+		if !page.HasMore {
+			return all, nil
+		}
+		q.After = page.NextCursor
+	}
+}
+
 func (r *PostgresRepository) EnsureSuperadmin(ctx context.Context, newID uuid.UUID, email string) (BootstrapResult, error) {
 	var result string
 	err := r.tm.WithinTx(ctx, func(ctx context.Context) error {
