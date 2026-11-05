@@ -30,6 +30,12 @@ updates:
     directory: /backend
     schedule:
       interval: monthly
+    ignore:
+      # The Go version of the image must match go.mod (tests run with that
+      # toolchain): both are upgraded by hand together. A golang:1.26 -> 1.27
+      # tag change counts as a minor update.
+      - dependency-name: "golang"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: docker
     directory: /docker/firebase

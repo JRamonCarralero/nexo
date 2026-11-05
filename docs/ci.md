@@ -146,7 +146,7 @@ Always runs.
 | Go modules | `backend/` | Weekly | All in a single pull request |
 | npm | `frontend/` | Weekly | Minor and patch updates together; majors separately, to review them one by one |
 | GitHub Actions | `/` | Monthly | — |
-| Docker | `backend/` | Monthly | — |
+| Docker | `backend/` | Monthly | Go minor and major versions ignored: the image follows `go.mod` and is upgraded by hand with it |
 | Docker | `docker/firebase/` | Monthly | Node majors ignored: they follow `.nvmrc` and are bumped by hand |
 
 ## Before CI: local git hooks

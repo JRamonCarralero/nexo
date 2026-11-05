@@ -27,7 +27,7 @@ Guiding principles:
 
 | Concern | Technology | Notes |
 |---|---|---|
-| Language | Go 1.26 (toolchain pinned to 1.26.10 in `go.mod`) | |
+| Language | Go 1.27 (toolchain pinned to 1.27.3 in `go.mod`; the Docker image uses the same minor) | Upgrades are done by hand in `go.mod` and the `Dockerfile` together |
 | HTTP router | [Gin](https://gin-gonic.com/) | Only inside `internal/httpserver` (enforced by depguard) |
 | API contract | OpenAPI 3.0 + [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) (strict server) | Generated code in `internal/httpserver/api` |
 | Database | PostgreSQL 17 via [pgx v5](https://github.com/jackc/pgx) | `citext`, `unaccent`, `pg_trgm` enabled |
