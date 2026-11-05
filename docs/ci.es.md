@@ -146,7 +146,7 @@ Se ejecuta siempre.
 | Módulos de Go | `backend/` | Semanal | Todo en un único pull request |
 | npm | `frontend/` | Semanal | Actualizaciones *minor* y *patch* juntas; las *major* por separado, para revisarlas una a una |
 | GitHub Actions | `/` | Mensual | — |
-| Docker | `backend/` | Mensual | — |
+| Docker | `backend/` | Mensual | Se ignoran las versiones menores y mayores de Go: la imagen sigue a `go.mod` y se actualiza a mano junto con él |
 | Docker | `docker/firebase/` | Mensual | Se ignoran los saltos de versión mayor de Node: siguen a `.nvmrc` y se suben a mano |
 
 ## Antes del CI: ganchos de git en local

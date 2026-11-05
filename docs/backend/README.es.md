@@ -27,7 +27,7 @@ Principios:
 
 | Aspecto | Tecnología | Notas |
 |---|---|---|
-| Lenguaje | Go 1.26 (toolchain fijado en 1.26.10 en `go.mod`) | |
+| Lenguaje | Go 1.27 (toolchain fijado en 1.27.3 en `go.mod`; la imagen Docker usa la misma versión menor) | Se actualiza a mano, en `go.mod` y en el `Dockerfile` a la vez |
 | Router HTTP | [Gin](https://gin-gonic.com/) | Solo dentro de `internal/httpserver` (lo vigila depguard) |
 | Contrato de la API | OpenAPI 3.0 + [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) (servidor estricto) | Código generado en `internal/httpserver/api` |
 | Base de datos | PostgreSQL 17 con [pgx v5](https://github.com/jackc/pgx) | `citext`, `unaccent` y `pg_trgm` activadas |
