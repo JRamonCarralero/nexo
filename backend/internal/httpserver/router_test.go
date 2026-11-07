@@ -3,6 +3,7 @@ package httpserver_test
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -312,7 +313,8 @@ func TestMembersCannotRenameTheWorkspace(t *testing.T) {
 
 func TestInvitationTokensNeverReachTheLogs(t *testing.T) {
 	r, logs := newRouter(t, nil)
-	const token = "c2VjcmV0LXRva2VuLXRoYXQtbXVzdC1ub3QtbGVhaw0"
+	// Built at run time so secret scanners do not mistake a test value for a real key.
+	token := base64.RawURLEncoding.EncodeToString([]byte("nexo-test-token-must-not-leak-32"))
 
 	rec := do(r, http.MethodGet, "/api/v1/invitations/"+token, withToken)
 

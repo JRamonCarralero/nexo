@@ -1,0 +1,7 @@
+# Findings reviewed and confirmed as false positives. One fingerprint per line
+# (commit:file:rule:line), so only that exact finding is ignored.
+#
+# Test value, not a secret: base64 of "secret-token-that-must-not-leak", used to
+# check that invitation tokens never reach the logs. The test now builds the
+# value at run time; this entry covers the commit that still contains it.
+27318a7149643794f0613deab34ee05244a43fb3:backend/internal/httpserver/router_test.go:generic-api-key:315
