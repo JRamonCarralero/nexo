@@ -20,6 +20,7 @@ type PostgresRepository struct {
 	tm          *postgres.TxManager
 	workspaces  database.Store[Workspace]
 	memberships database.Store[Membership]
+	invitations database.Store[Invitation]
 }
 
 var _ Repository = (*PostgresRepository)(nil)
@@ -29,6 +30,7 @@ func NewPostgresRepository(tm *postgres.TxManager) *PostgresRepository {
 		tm:          tm,
 		workspaces:  postgres.NewStore[Workspace](tm),
 		memberships: postgres.NewStore[Membership](tm),
+		invitations: postgres.NewStore[Invitation](tm),
 	}
 }
 

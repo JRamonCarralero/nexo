@@ -29,6 +29,8 @@ An ADR records one significant decision: the context, what was decided, why, and
 | [0021](0021-realtime-signals.md) | Real time through Firestore signal documents | Accepted (not implemented yet) | 2026-10-22 |
 | [0022](0022-rls-without-force.md) | Row-Level Security without FORCE; the owner runs privileged functions | Accepted | 2026-10-28 |
 | [0023](0023-workspaces-and-roles.md) | Workspaces, memberships and roles | Accepted | 2026-10-28 |
+| [0024](0024-invitations.md) | Invitations by email and by link | Accepted | 2026-11-07 |
+| [0025](0025-email-over-smtp.md) | Email over SMTP behind a Mailer interface | Accepted | 2026-11-07 |
 
 ## Writing a new ADR
 

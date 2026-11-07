@@ -19,12 +19,12 @@ linters:
           files:
             - "$all"
             - "!**/internal/platform/database/**"
-            - "!**/store_postgres.go"
+            - "!**/*store_postgres.go"
             - "!**/internal/app/**"
             - "!**/sqlc/**"
           deny:
             - pkg: github.com/jackc/pgx
-              desc: "pgx only in platform/database, store_postgres.go files and sqlc code"
+              desc: "pgx only in platform/database, *store_postgres.go files and sqlc code"
         firebase:
           files:
             - "$all"

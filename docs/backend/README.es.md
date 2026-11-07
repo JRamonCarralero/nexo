@@ -36,7 +36,8 @@ Principios:
 | Logs | `log/slog` (librería estándar) | JSON para Google Cloud Logging |
 | Tests | testify, [mockery](https://vektra.github.io/mockery/) v3, [testcontainers](https://golang.testcontainers.org/) | |
 | Lint | golangci-lint v2 (incluye depguard, staticcheck y revive) | `backend/.golangci.yml` |
-| Previsto | sqlc (consultas a medida), Pub/Sub (eventos), Firestore (avisos en tiempo real), Resend (email), R2 (archivos) | Ver los ADR 0015 y 0021 |
+| Email | SMTP (librería estándar): Mailpit en local y el relé SMTP de Resend en producción | [ADR-0025](adr/0025-email-over-smtp.es.md) |
+| Previsto | sqlc (consultas a medida), Pub/Sub (eventos), Firestore (avisos en tiempo real), R2 (archivos) | Ver los ADR 0015 y 0021 |
 
 Herramientas como oapi-codegen, goose y mockery están declaradas como **dependencias de herramientas** de Go en `go.mod` y se ejecutan con `go tool <nombre>`, así que todas las máquinas usan las mismas versiones.
 
@@ -64,6 +65,7 @@ backend/
 │       ├── apperror/           Tipo de error de la aplicación
 │       ├── auth/               Interfaz Authenticator (+ adaptador firebase/)
 │       ├── config/             Configuración por variables de entorno
+│       ├── email/              Interfaz Mailer (+ adaptador smtp/)
 │       ├── database/           Contratos de datos independientes de la tecnología (+ implementación postgres/)
 │       ├── logger/             Configuración de slog y trace id en el contexto
 │       └── scope/              Usuario que actúa y espacio de trabajo en el contexto de la petición
@@ -100,7 +102,7 @@ Las reglas, comprobadas por [`arch_test.go`](../../backend/arch_test.go) en cada
 | Los módulos no importan el montaje ni los middlewares HTTP | Sin acoplamiento oculto con el transporte |
 | `cmd` no importa módulos, query ni detalles internos de HTTP | `main.go` se mantiene mínimo |
 
-`depguard` (golangci-lint) cubre la parte de terceros: **pgx** solo en `platform/database`, en los ficheros `store_postgres.go` y en el código generado por sqlc; el **SDK de Firebase** solo en sus adaptadores; **Gin** solo en `internal/httpserver` y `cmd`.
+`depguard` (golangci-lint) cubre la parte de terceros: **pgx** solo en `platform/database`, en los ficheros `*store_postgres.go` y en el código generado por sqlc; el **SDK de Firebase** solo en sus adaptadores; **Gin** solo en `internal/httpserver` y `cmd`.
 
 Excepción intencionada: los módulos pueden importar `platform/database/postgres`, porque cada módulo es dueño de su repositorio de PostgreSQL (`store_postgres.go`).
 
@@ -205,6 +207,11 @@ Módulo `internal/modules/workspace` ([ADR-0023](adr/0023-workspaces-and-roles.e
 | Renombrar | Admins | `PATCH /workspaces/{id}` |
 | Cambiar el rol de un miembro | Admins | `PATCH /workspaces/{id}/members/{userId}` |
 | Quitar a un miembro / salir | Admins / uno mismo | `DELETE /workspaces/{id}/members/{userId}` |
+| Invitar por email o crear un enlace para compartir | Admins | `POST /workspaces/{id}/invitations` |
+| Listar / revocar las invitaciones pendientes | Admins | `GET /workspaces/{id}/invitations`, `DELETE /workspaces/{id}/invitations/{invitationId}` |
+| Ver una invitación / aceptarla | Quien tiene el token, con la sesión iniciada | `GET /invitations/{token}`, `POST /invitations/{token}/accept` |
+
+Invitaciones ([ADR-0024](adr/0024-invitations.es.md)): las de email son de un solo uso, caducan en 7 días y exigen una cuenta con el mismo email, verificado; los enlaces son reutilizables durante 30 días y nunca dan el rol de admin. Solo se guarda el hash SHA-256 del token, y los tokens nunca llegan a los logs.
 
 Cada regla se comprueba dos veces: en el servicio (códigos de error claros) y en PostgreSQL (políticas, permisos por columna y un trigger que conserva al menos un admin). Los tests de integración demuestran que la base de datos las aplica por sí sola.
 
@@ -220,12 +227,12 @@ ID token de Firebase → `Authenticator.VerifyToken` → `nexo_resolve_user` (al
 
 | Tipo | HTTP | Códigos habituales |
 |---|---|---|
-| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE` |
+| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE`, `INVALID_INVITATION_KIND`, `LINK_CANNOT_GRANT_ADMIN` |
 | `UNAUTHENTICATED` | 401 | `MISSING_TOKEN`, `INVALID_TOKEN`, `EMAIL_REQUIRED` |
-| `FORBIDDEN` | 403 | `FORBIDDEN` (incluye rechazos de la RLS), `WORKSPACE_ADMIN_REQUIRED` |
-| `NOT_FOUND` | 404 | `<RECURSO>_NOT_FOUND`, `ROUTE_NOT_FOUND` |
-| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN` |
-| `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE` |
+| `FORBIDDEN` | 403 | `FORBIDDEN` (incluye rechazos de la RLS), `WORKSPACE_ADMIN_REQUIRED`, `INVITATION_EMAIL_MISMATCH`, `EMAIL_NOT_VERIFIED` |
+| `NOT_FOUND` | 404 | `<RECURSO>_NOT_FOUND` (p. ej. `INVITATION_NOT_FOUND`), `ROUTE_NOT_FOUND` |
+| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN`, `ALREADY_MEMBER`, `INVITATION_EXPIRED` |
+| `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE`, `EMAIL_DELIVERY_FAILED` |
 | `INTERNAL` | 500 | `INTERNAL_ERROR` |
 
 Reglas: crear los errores con los constructores con nombre; envolver las causas; devolverlos (los módulos nunca escriben respuestas HTTP); los códigos forman parte del contrato público y necesitan su traducción en el frontend.
@@ -263,6 +270,11 @@ Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` (
 | `FIREBASE_PROJECT_ID` | — (obligatoria) | `demo-nexo` en local |
 | `FIREBASE_AUTH_EMULATOR_HOST` | — | Solo en local y en tests; se rechaza en producción |
 | `BOOTSTRAP_SUPERADMIN_EMAIL` | — | Alta opcional del superadmin |
+| `APP_BASE_URL` | `http://localhost:5173` | URL de la web, usada en los enlaces que se envían por email; debe ser HTTPS en producción |
+| `SMTP_HOST`, `SMTP_PORT` | `localhost`, `1025` | Servidor SMTP (Mailpit en local) |
+| `SMTP_TLS` | `none` | `none`, `starttls` o `tls`; `none` se rechaza en producción |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | — | Credenciales SMTP (Resend: `resend` y la clave de API) |
+| `EMAIL_FROM` | `Nexo <no-reply@nexo.local>` | Remitente de todos los emails |
 
 ## 15. Arranque y apagado
 
@@ -271,7 +283,7 @@ Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` (
 ## 16. Migraciones de la base de datos
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, ejecutadas con el **dueño** de las tablas (`DB_URL` en el Makefile).
-- Migraciones actuales: `00001` extensiones, `00002` rol `nexo_app` + funciones auxiliares de la RLS, `00003` usuarios + funciones de alta, `00004` RLS sin `FORCE`, `00005` espacios de trabajo y membresías.
+- Migraciones actuales: `00001` extensiones, `00002` rol `nexo_app` + funciones auxiliares de la RLS, `00003` usuarios + funciones de alta, `00004` RLS sin `FORCE`, `00005` espacios de trabajo y membresías, `00006` invitaciones.
 - Las tablas nuevas de espacio de trabajo siguen la plantilla de [data-access.es.md](data-access.es.md#añadir-una-tabla-de-espacio-de-trabajo) (RLS, política, índices).
 
 ## 17. Tests
@@ -279,14 +291,14 @@ Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` (
 | Nivel | Comando | Qué |
 |---|---|---|
 | Unitarios | `make test` | Servicios con mocks de mockery, router con adaptadores falsos, `arch_test.go` |
-| Integración | `make test-integration` | PostgreSQL y el emulador de Firebase Auth con testcontainers: Store, RLS, permisos por columna, alta de usuarios y adaptador de Firebase |
+| Integración | `make test-integration` | PostgreSQL, el emulador de Firebase Auth y Mailpit con testcontainers: Store, RLS, permisos por columna, alta de usuarios, invitaciones y adaptadores de Firebase y SMTP |
 
 Detalles y convenciones en el [ADR-0018](adr/0018-testing-strategy.es.md). Utilidades: `pgtest` (base de datos con conexiones del rol de la API y del dueño; el dueño **no** es superusuario, como en una base de datos gestionada) y `fbtest` (emulador, registro, inicio de sesión y verificación de email).
 
 ## 18. Desarrollo local
 
 ```bash
-make up          # PostgreSQL (5433) + emulador de Firebase Auth (9099, interfaz en 4000) + roles de BD
+make up          # PostgreSQL (5433) + emulador de Firebase Auth (9099, interfaz en 4000) + Mailpit (SMTP 1025, interfaz en 8025) + roles de BD
 make db-migrate  # aplica las migraciones
 make dev-api     # API en http://localhost:8080
 make test        # tests unitarios
@@ -300,11 +312,12 @@ make lint
 | Elemento | Estado | ADR |
 |---|---|---|
 | Espacios de trabajo, membresías y middleware de espacio | ✅ Hecho | [0017](adr/0017-workspace-in-url-path.es.md), [0023](adr/0023-workspaces-and-roles.es.md) |
-| Invitaciones (email y enlace), Mailer + Mailpit | Siguiente (hito M0) | — |
+| Invitaciones (email y enlace), Mailer + Mailpit | ✅ Hecho | [0024](adr/0024-invitations.es.md), [0025](adr/0025-email-over-smtp.es.md) |
+| Pantallas del frontend, datos de prueba y CLA | Siguiente (hito M0) | — |
 | Comandos, eventos y outbox transaccional | Previsto | [0015](adr/0015-commands-and-outbox.es.md) |
 | sqlc para las consultas a medida | Previsto | [0005](adr/0005-data-access-store.es.md) |
 | Modelos de lectura en `internal/query` | Previsto | [0002](adr/0002-modular-monolith.es.md) |
 | Avisos en tiempo real con Firestore | Previsto | [0021](adr/0021-realtime-signals.es.md) |
 | Campos personalizados en JSONB | Fase 2 | [0016](adr/0016-custom-fields-jsonb.es.md) |
-| Email (Mailer + Mailpit) y archivos (FileStorage + MinIO/R2) | Con las invitaciones / los adjuntos | — |
+| Archivos (FileStorage + MinIO/R2) | Con los adjuntos | — |
 | Despliegue en Cloud Run (Workload Identity Federation) | Más adelante | — |

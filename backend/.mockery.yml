@@ -14,4 +14,8 @@ packages:
   github.com/JRamonCarralero/nexo/backend/internal/modules/workspace:
     interfaces:
       Repository: {}
+      InvitationRepository: {}
       UserDirectory: {}
+  github.com/JRamonCarralero/nexo/backend/internal/platform/email:
+    interfaces:
+      Mailer: {}

@@ -55,6 +55,48 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for InvitationKind.
+const (
+	Email InvitationKind = "email"
+	Link  InvitationKind = "link"
+)
+
+// Valid indicates whether the value is a known member of the InvitationKind enum.
+func (e InvitationKind) Valid() bool {
+	switch e {
+	case Email:
+		return true
+	case Link:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for InvitationPreviewStatus.
+const (
+	Accepted InvitationPreviewStatus = "accepted"
+	Expired  InvitationPreviewStatus = "expired"
+	Pending  InvitationPreviewStatus = "pending"
+	Revoked  InvitationPreviewStatus = "revoked"
+)
+
+// Valid indicates whether the value is a known member of the InvitationPreviewStatus enum.
+func (e InvitationPreviewStatus) Valid() bool {
+	switch e {
+	case Accepted:
+		return true
+	case Expired:
+		return true
+	case Pending:
+		return true
+	case Revoked:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Role.
 const (
 	RoleAdmin  Role = "admin"
@@ -101,6 +143,69 @@ type HealthChecks string
 
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
+
+// Invitation defines model for Invitation.
+type Invitation struct {
+	CreatedAt time.Time            `json:"createdAt"`
+	Email     *openapi_types.Email `json:"email,omitempty"`
+	ExpiresAt time.Time            `json:"expiresAt"`
+	Id        openapi_types.UUID   `json:"id"`
+	Kind      InvitationKind       `json:"kind"`
+
+	// Role Rol en un espacio de trabajo. `admin` gestiona el espacio, sus miembros e
+	// invitaciones; `member` trabaja en él; `guest` es un colaborador externo
+	// (sus restricciones llegarán con los proyectos).
+	Role Role `json:"role"`
+}
+
+// InvitationCreated defines model for InvitationCreated.
+type InvitationCreated struct {
+	Invitation Invitation `json:"invitation"`
+
+	// Url Solo en las invitaciones por enlace, y solo en esta respuesta.
+	Url *string `json:"url,omitempty"`
+}
+
+// InvitationInput defines model for InvitationInput.
+type InvitationInput struct {
+	// Email Obligatorio cuando `kind` es `email`.
+	Email *openapi_types.Email `json:"email,omitempty"`
+	Kind  InvitationKind       `json:"kind"`
+
+	// Role Rol en un espacio de trabajo. `admin` gestiona el espacio, sus miembros e
+	// invitaciones; `member` trabaja en él; `guest` es un colaborador externo
+	// (sus restricciones llegarán con los proyectos).
+	Role Role `json:"role"`
+}
+
+// InvitationKind defines model for InvitationKind.
+type InvitationKind string
+
+// InvitationList defines model for InvitationList.
+type InvitationList struct {
+	Items []Invitation `json:"items"`
+}
+
+// InvitationPreview defines model for InvitationPreview.
+type InvitationPreview struct {
+	// Email A quién va dirigida (solo invitaciones por email).
+	Email     *openapi_types.Email `json:"email,omitempty"`
+	ExpiresAt time.Time            `json:"expiresAt"`
+
+	// InvitedBy Nombre de quien invita.
+	InvitedBy string         `json:"invitedBy"`
+	Kind      InvitationKind `json:"kind"`
+
+	// Role Rol en un espacio de trabajo. `admin` gestiona el espacio, sus miembros e
+	// invitaciones; `member` trabaja en él; `guest` es un colaborador externo
+	// (sus restricciones llegarán con los proyectos).
+	Role          Role                    `json:"role"`
+	Status        InvitationPreviewStatus `json:"status"`
+	WorkspaceName string                  `json:"workspaceName"`
+}
+
+// InvitationPreviewStatus defines model for InvitationPreview.Status.
+type InvitationPreviewStatus string
 
 // Member defines model for Member.
 type Member struct {
@@ -190,6 +295,9 @@ type WorkspaceList struct {
 	Items []Workspace `json:"items"`
 }
 
+// InvitationToken defines model for InvitationToken.
+type InvitationToken = string
+
 // WorkspaceId defines model for WorkspaceId.
 type WorkspaceId = openapi_types.UUID
 
@@ -199,6 +307,9 @@ type CreateWorkspaceJSONRequestBody = WorkspaceInput
 // UpdateWorkspaceJSONRequestBody defines body for UpdateWorkspace for application/json ContentType.
 type UpdateWorkspaceJSONRequestBody = WorkspaceInput
 
+// CreateInvitationJSONRequestBody defines body for CreateInvitation for application/json ContentType.
+type CreateInvitationJSONRequestBody = InvitationInput
+
 // UpdateMemberJSONRequestBody defines body for UpdateMember for application/json ContentType.
 type UpdateMemberJSONRequestBody = MemberUpdate
 
@@ -207,6 +318,12 @@ type ServerInterface interface {
 	// GetHealth Estado del servicio y de sus dependencias
 	// (GET /health)
 	GetHealth(c *gin.Context)
+	// GetInvitation Ver una invitación
+	// (GET /invitations/{token})
+	GetInvitation(c *gin.Context, token InvitationToken)
+	// AcceptInvitation Aceptar una invitación
+	// (POST /invitations/{token}/accept)
+	AcceptInvitation(c *gin.Context, token InvitationToken)
 	// GetMe Usuario autenticado
 	// (GET /me)
 	GetMe(c *gin.Context)
@@ -222,6 +339,15 @@ type ServerInterface interface {
 	// UpdateWorkspace Renombrar un espacio de trabajo
 	// (PATCH /workspaces/{workspaceId})
 	UpdateWorkspace(c *gin.Context, workspaceId WorkspaceId)
+	// ListInvitations Invitaciones pendientes
+	// (GET /workspaces/{workspaceId}/invitations)
+	ListInvitations(c *gin.Context, workspaceId WorkspaceId)
+	// CreateInvitation Invitar a alguien
+	// (POST /workspaces/{workspaceId}/invitations)
+	CreateInvitation(c *gin.Context, workspaceId WorkspaceId)
+	// RevokeInvitation Revocar una invitación
+	// (DELETE /workspaces/{workspaceId}/invitations/{invitationId})
+	RevokeInvitation(c *gin.Context, workspaceId WorkspaceId, invitationId openapi_types.UUID)
 	// ListMembers Miembros de un espacio de trabajo
 	// (GET /workspaces/{workspaceId}/members)
 	ListMembers(c *gin.Context, workspaceId WorkspaceId)
@@ -253,6 +379,56 @@ func (siw *ServerInterfaceWrapper) GetHealth(c *gin.Context) {
 	}
 
 	siw.Handler.GetHealth(c)
+}
+
+// GetInvitation operation middleware
+func (siw *ServerInterfaceWrapper) GetInvitation(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token InvitationToken
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", c.Param("token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter token: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetInvitation(c, token)
+}
+
+// AcceptInvitation operation middleware
+func (siw *ServerInterfaceWrapper) AcceptInvitation(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token InvitationToken
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", c.Param("token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter token: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AcceptInvitation(c, token)
 }
 
 // GetMe operation middleware
@@ -342,6 +518,90 @@ func (siw *ServerInterfaceWrapper) UpdateWorkspace(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateWorkspace(c, workspaceId)
+}
+
+// ListInvitations operation middleware
+func (siw *ServerInterfaceWrapper) ListInvitations(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "workspaceId" -------------
+	var workspaceId WorkspaceId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workspaceId", c.Param("workspaceId"), &workspaceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter workspaceId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListInvitations(c, workspaceId)
+}
+
+// CreateInvitation operation middleware
+func (siw *ServerInterfaceWrapper) CreateInvitation(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "workspaceId" -------------
+	var workspaceId WorkspaceId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workspaceId", c.Param("workspaceId"), &workspaceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter workspaceId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateInvitation(c, workspaceId)
+}
+
+// RevokeInvitation operation middleware
+func (siw *ServerInterfaceWrapper) RevokeInvitation(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "workspaceId" -------------
+	var workspaceId WorkspaceId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workspaceId", c.Param("workspaceId"), &workspaceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter workspaceId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "invitationId" -------------
+	var invitationId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "invitationId", c.Param("invitationId"), &invitationId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter invitationId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RevokeInvitation(c, workspaceId, invitationId)
 }
 
 // ListMembers operation middleware
@@ -473,6 +733,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/workspaces/:workspaceId/members", wrapper.ListMembers)
 	router.DELETE(options.BaseURL+"/workspaces/:workspaceId/members/:userId", wrapper.RemoveMember)
 	router.PATCH(options.BaseURL+"/workspaces/:workspaceId/members/:userId", wrapper.UpdateMember)
+	router.GET(options.BaseURL+"/workspaces/:workspaceId/invitations", wrapper.ListInvitations)
+	router.POST(options.BaseURL+"/workspaces/:workspaceId/invitations", wrapper.CreateInvitation)
+	router.DELETE(options.BaseURL+"/workspaces/:workspaceId/invitations/:invitationId", wrapper.RevokeInvitation)
+	router.GET(options.BaseURL+"/invitations/:token", wrapper.GetInvitation)
+	router.POST(options.BaseURL+"/invitations/:token/accept", wrapper.AcceptInvitation)
 }
 
 type ProblemApplicationProblemPlusJSONResponse Problem
@@ -520,6 +785,144 @@ type GetHealthdefaultApplicationProblemPlusJSONResponse struct {
 }
 
 func (response GetHealthdefaultApplicationProblemPlusJSONResponse) VisitGetHealthResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetInvitationRequestObject struct {
+	Token InvitationToken `json:"token"`
+}
+
+type GetInvitationResponseObject interface {
+	VisitGetInvitationResponse(w http.ResponseWriter) error
+}
+
+type GetInvitation200JSONResponse InvitationPreview
+
+func (response GetInvitation200JSONResponse) VisitGetInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetInvitation404ApplicationProblemPlusJSONResponse struct {
+	ProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetInvitation404ApplicationProblemPlusJSONResponse) VisitGetInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetInvitationdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetInvitationdefaultApplicationProblemPlusJSONResponse) VisitGetInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AcceptInvitationRequestObject struct {
+	Token InvitationToken `json:"token"`
+}
+
+type AcceptInvitationResponseObject interface {
+	VisitAcceptInvitationResponse(w http.ResponseWriter) error
+}
+
+type AcceptInvitation200JSONResponse Workspace
+
+func (response AcceptInvitation200JSONResponse) VisitAcceptInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AcceptInvitation403ApplicationProblemPlusJSONResponse struct {
+	ProblemApplicationProblemPlusJSONResponse
+}
+
+func (response AcceptInvitation403ApplicationProblemPlusJSONResponse) VisitAcceptInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AcceptInvitation404ApplicationProblemPlusJSONResponse Problem
+
+func (response AcceptInvitation404ApplicationProblemPlusJSONResponse) VisitAcceptInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AcceptInvitation409ApplicationProblemPlusJSONResponse Problem
+
+func (response AcceptInvitation409ApplicationProblemPlusJSONResponse) VisitAcceptInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AcceptInvitationdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response AcceptInvitationdefaultApplicationProblemPlusJSONResponse) VisitAcceptInvitationResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -817,6 +1220,251 @@ func (response UpdateWorkspacedefaultApplicationProblemPlusJSONResponse) VisitUp
 	return err
 }
 
+type ListInvitationsRequestObject struct {
+	WorkspaceId WorkspaceId `json:"workspaceId"`
+}
+
+type ListInvitationsResponseObject interface {
+	VisitListInvitationsResponse(w http.ResponseWriter) error
+}
+
+type ListInvitations200JSONResponse InvitationList
+
+func (response ListInvitations200JSONResponse) VisitListInvitationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvitations403ApplicationProblemPlusJSONResponse struct {
+	ProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListInvitations403ApplicationProblemPlusJSONResponse) VisitListInvitationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvitations404ApplicationProblemPlusJSONResponse Problem
+
+func (response ListInvitations404ApplicationProblemPlusJSONResponse) VisitListInvitationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListInvitationsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ListInvitationsdefaultApplicationProblemPlusJSONResponse) VisitListInvitationsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitationRequestObject struct {
+	WorkspaceId WorkspaceId `json:"workspaceId"`
+	Body        *CreateInvitationJSONRequestBody
+}
+
+type CreateInvitationResponseObject interface {
+	VisitCreateInvitationResponse(w http.ResponseWriter) error
+}
+
+type CreateInvitation201JSONResponse InvitationCreated
+
+func (response CreateInvitation201JSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitation400ApplicationProblemPlusJSONResponse struct {
+	ProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateInvitation400ApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitation403ApplicationProblemPlusJSONResponse Problem
+
+func (response CreateInvitation403ApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitation404ApplicationProblemPlusJSONResponse Problem
+
+func (response CreateInvitation404ApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitation409ApplicationProblemPlusJSONResponse Problem
+
+func (response CreateInvitation409ApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitation503ApplicationProblemPlusJSONResponse Problem
+
+func (response CreateInvitation503ApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateInvitationdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response CreateInvitationdefaultApplicationProblemPlusJSONResponse) VisitCreateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvitationRequestObject struct {
+	WorkspaceId  WorkspaceId        `json:"workspaceId"`
+	InvitationId openapi_types.UUID `json:"invitationId"`
+}
+
+type RevokeInvitationResponseObject interface {
+	VisitRevokeInvitationResponse(w http.ResponseWriter) error
+}
+
+type RevokeInvitation204Response struct {
+}
+
+func (response RevokeInvitation204Response) VisitRevokeInvitationResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RevokeInvitation403ApplicationProblemPlusJSONResponse struct {
+	ProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeInvitation403ApplicationProblemPlusJSONResponse) VisitRevokeInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvitation404ApplicationProblemPlusJSONResponse Problem
+
+func (response RevokeInvitation404ApplicationProblemPlusJSONResponse) VisitRevokeInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevokeInvitationdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response RevokeInvitationdefaultApplicationProblemPlusJSONResponse) VisitRevokeInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListMembersRequestObject struct {
 	WorkspaceId WorkspaceId `json:"workspaceId"`
 }
@@ -1054,6 +1702,12 @@ type StrictServerInterface interface {
 	// GetHealth Estado del servicio y de sus dependencias
 	// (GET /health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
+	// GetInvitation Ver una invitación
+	// (GET /invitations/{token})
+	GetInvitation(ctx context.Context, request GetInvitationRequestObject) (GetInvitationResponseObject, error)
+	// AcceptInvitation Aceptar una invitación
+	// (POST /invitations/{token}/accept)
+	AcceptInvitation(ctx context.Context, request AcceptInvitationRequestObject) (AcceptInvitationResponseObject, error)
 	// GetMe Usuario autenticado
 	// (GET /me)
 	GetMe(ctx context.Context, request GetMeRequestObject) (GetMeResponseObject, error)
@@ -1069,6 +1723,15 @@ type StrictServerInterface interface {
 	// UpdateWorkspace Renombrar un espacio de trabajo
 	// (PATCH /workspaces/{workspaceId})
 	UpdateWorkspace(ctx context.Context, request UpdateWorkspaceRequestObject) (UpdateWorkspaceResponseObject, error)
+	// ListInvitations Invitaciones pendientes
+	// (GET /workspaces/{workspaceId}/invitations)
+	ListInvitations(ctx context.Context, request ListInvitationsRequestObject) (ListInvitationsResponseObject, error)
+	// CreateInvitation Invitar a alguien
+	// (POST /workspaces/{workspaceId}/invitations)
+	CreateInvitation(ctx context.Context, request CreateInvitationRequestObject) (CreateInvitationResponseObject, error)
+	// RevokeInvitation Revocar una invitación
+	// (DELETE /workspaces/{workspaceId}/invitations/{invitationId})
+	RevokeInvitation(ctx context.Context, request RevokeInvitationRequestObject) (RevokeInvitationResponseObject, error)
 	// ListMembers Miembros de un espacio de trabajo
 	// (GET /workspaces/{workspaceId}/members)
 	ListMembers(ctx context.Context, request ListMembersRequestObject) (ListMembersResponseObject, error)
@@ -1154,6 +1817,58 @@ func (sh *strictHandler) GetHealth(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(GetHealthResponseObject); ok {
 		if err := validResponse.VisitGetHealthResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetInvitation operation middleware
+func (sh *strictHandler) GetInvitation(ctx *gin.Context, token InvitationToken) {
+	var request GetInvitationRequestObject
+
+	request.Token = token
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetInvitation(ctx, request.(GetInvitationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetInvitation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetInvitationResponseObject); ok {
+		if err := validResponse.VisitGetInvitationResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AcceptInvitation operation middleware
+func (sh *strictHandler) AcceptInvitation(ctx *gin.Context, token InvitationToken) {
+	var request AcceptInvitationRequestObject
+
+	request.Token = token
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AcceptInvitation(ctx, request.(AcceptInvitationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AcceptInvitation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AcceptInvitationResponseObject); ok {
+		if err := validResponse.VisitAcceptInvitationResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -1299,6 +2014,92 @@ func (sh *strictHandler) UpdateWorkspace(ctx *gin.Context, workspaceId Workspace
 	}
 }
 
+// ListInvitations operation middleware
+func (sh *strictHandler) ListInvitations(ctx *gin.Context, workspaceId WorkspaceId) {
+	var request ListInvitationsRequestObject
+
+	request.WorkspaceId = workspaceId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListInvitations(ctx, request.(ListInvitationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListInvitations")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(ListInvitationsResponseObject); ok {
+		if err := validResponse.VisitListInvitationsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateInvitation operation middleware
+func (sh *strictHandler) CreateInvitation(ctx *gin.Context, workspaceId WorkspaceId) {
+	var request CreateInvitationRequestObject
+
+	request.WorkspaceId = workspaceId
+
+	var body CreateInvitationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateInvitation(ctx, request.(CreateInvitationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateInvitation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(CreateInvitationResponseObject); ok {
+		if err := validResponse.VisitCreateInvitationResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RevokeInvitation operation middleware
+func (sh *strictHandler) RevokeInvitation(ctx *gin.Context, workspaceId WorkspaceId, invitationId openapi_types.UUID) {
+	var request RevokeInvitationRequestObject
+
+	request.WorkspaceId = workspaceId
+	request.InvitationId = invitationId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RevokeInvitation(ctx, request.(RevokeInvitationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RevokeInvitation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(RevokeInvitationResponseObject); ok {
+		if err := validResponse.VisitRevokeInvitationResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListMembers operation middleware
 func (sh *strictHandler) ListMembers(ctx *gin.Context, workspaceId WorkspaceId) {
 	var request ListMembersRequestObject
@@ -1391,41 +2192,55 @@ func (sh *strictHandler) UpdateMember(ctx *gin.Context, workspaceId WorkspaceId,
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

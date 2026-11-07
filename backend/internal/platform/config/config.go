@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -31,6 +33,23 @@ type Config struct {
 	FirebaseAuthEmulatorHost string
 	// BootstrapSuperadminEmail, when set, makes sure the platform has a superadmin.
 	BootstrapSuperadminEmail string
+
+	// AppBaseURL is the web app's public URL, used in links sent to people
+	// (e.g. invitations).
+	AppBaseURL string
+	// SMTP delivers email: Mailpit locally, Resend's SMTP relay in production.
+	SMTP SMTPConfig
+}
+
+// SMTPConfig configures outgoing email.
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	// TLS is none (local only), starttls or tls.
+	TLS  string
+	From string
 }
 
 func (c Config) IsProduction() bool { return c.Env == EnvProduction }
@@ -48,6 +67,24 @@ func Load() (Config, error) {
 		FirebaseProjectID:        os.Getenv("FIREBASE_PROJECT_ID"),
 		FirebaseAuthEmulatorHost: os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"),
 		BootstrapSuperadminEmail: os.Getenv("BOOTSTRAP_SUPERADMIN_EMAIL"),
+
+		AppBaseURL: getenv("APP_BASE_URL", "http://localhost:5173"),
+		SMTP: SMTPConfig{
+			Host:     getenv("SMTP_HOST", "localhost"),
+			Username: os.Getenv("SMTP_USERNAME"),
+			Password: os.Getenv("SMTP_PASSWORD"),
+			TLS:      getenv("SMTP_TLS", "none"),
+			From:     getenv("EMAIL_FROM", "Nexo <no-reply@nexo.local>"),
+		},
+	}
+
+	port, err := strconv.Atoi(getenv("SMTP_PORT", "1025"))
+	if err != nil {
+		return Config{}, fmt.Errorf("SMTP_PORT: %w", err)
+	}
+	cfg.SMTP.Port = port
+	if u, err := url.Parse(cfg.AppBaseURL); err != nil || u.Scheme == "" || u.Host == "" {
+		return Config{}, fmt.Errorf("APP_BASE_URL: invalid URL %q", cfg.AppBaseURL)
 	}
 
 	if err := cfg.LogLevel.UnmarshalText([]byte(getenv("LOG_LEVEL", "info"))); err != nil {
@@ -68,6 +105,15 @@ func Load() (Config, error) {
 	if cfg.IsProduction() && cfg.FirebaseAuthEmulatorHost != "" {
 		// The emulator accepts unsigned tokens: it must never reach production.
 		return Config{}, errors.New("FIREBASE_AUTH_EMULATOR_HOST must not be set in production")
+	}
+	if cfg.IsProduction() {
+		// Invitation links carry tokens: they must travel over HTTPS, and so must email.
+		if u, _ := url.Parse(cfg.AppBaseURL); u.Scheme != "https" {
+			return Config{}, errors.New("APP_BASE_URL must use https in production")
+		}
+		if cfg.SMTP.TLS == "none" {
+			return Config{}, errors.New("SMTP_TLS must be starttls or tls in production")
+		}
 	}
 	return cfg, nil
 }

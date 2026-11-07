@@ -32,7 +32,16 @@
     "WORKSPACE_ADMIN_REQUIRED": "Solo los administradores del espacio pueden hacer esto.",
     "MEMBER_NOT_FOUND": "Esa persona no es miembro de este espacio.",
     "INVALID_ROLE": "El rol no es válido.",
-    "LAST_ADMIN": "Un espacio de trabajo necesita al menos un administrador. Nombra a otra persona administradora antes."
+    "LAST_ADMIN": "Un espacio de trabajo necesita al menos un administrador. Nombra a otra persona administradora antes.",
+    "INVALID_EMAIL": "La dirección de email no es válida.",
+    "INVALID_INVITATION_KIND": "El tipo de invitación no es válido.",
+    "LINK_CANNOT_GRANT_ADMIN": "Un enlace de invitación no puede dar el rol de administrador. Invita a esa persona por email.",
+    "ALREADY_MEMBER": "Esa persona ya es miembro del espacio de trabajo.",
+    "INVITATION_NOT_FOUND": "La invitación no existe o ya no es válida.",
+    "INVITATION_EXPIRED": "La invitación ha caducado. Pide una nueva a quien te invitó.",
+    "INVITATION_EMAIL_MISMATCH": "Esta invitación es para otra dirección de email. Inicia sesión con la cuenta correcta.",
+    "EMAIL_NOT_VERIFIED": "Verifica tu dirección de email para aceptar la invitación.",
+    "EMAIL_DELIVERY_FAILED": "No se ha podido enviar el email de invitación. Inténtalo de nuevo en unos minutos."
   },
   "traceId": "Código de seguimiento: {{traceId}}"
 }

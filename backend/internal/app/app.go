@@ -17,6 +17,7 @@ import (
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/auth"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/config"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/email"
 )
 
 // Deps are the clients created by main.
@@ -25,6 +26,7 @@ type Deps struct {
 	Logger        *slog.Logger
 	DB            *pgxpool.Pool
 	Authenticator auth.Authenticator
+	Mailer        email.Mailer
 	Version       string
 }
 
@@ -39,14 +41,16 @@ func New(d Deps) (*App, error) {
 	tm := postgres.NewTxManager(d.DB)
 
 	users := user.NewService(user.NewPostgresRepository(tm))
-	workspaces := workspace.NewService(workspace.NewPostgresRepository(tm), userDirectory{users})
+	workspaceRepo := workspace.NewPostgresRepository(tm)
+	workspaces := workspace.NewService(workspaceRepo, userDirectory{users})
+	invitations := workspace.NewInvitationService(workspaceRepo, workspaceRepo, userDirectory{users}, d.Mailer, d.Config.AppBaseURL)
 
 	router, err := httpserver.NewRouter(
 		httpserver.Deps{Logger: d.Logger, Authenticator: d.Authenticator, Users: users, Workspaces: workspaces},
 		httpserver.Handlers{
 			System:    system.NewHandler(d.DB, d.Version),
 			User:      user.NewHandler(users),
-			Workspace: workspace.NewHandler(workspaces),
+			Workspace: workspace.NewHandler(workspaces, invitations),
 		},
 	)
 	if err != nil {

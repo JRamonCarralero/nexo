@@ -13,11 +13,12 @@ import (
 // the path is already validated by the workspace middleware and is in the
 // request scope, so the handlers do not read it from the request.
 type Handler struct {
-	svc *Service
+	svc         *Service
+	invitations *InvitationService
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, invitations *InvitationService) *Handler {
+	return &Handler{svc: svc, invitations: invitations}
 }
 
 func (h *Handler) ListWorkspaces(ctx context.Context, _ api.ListWorkspacesRequestObject) (api.ListWorkspacesResponseObject, error) {

@@ -3,6 +3,7 @@ package httpserver_test
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -91,6 +92,13 @@ func (fakeWorkspaces) GetByID(ctx context.Context, id uuid.UUID) (workspace.Work
 	return w, nil
 }
 
+// fakeInvitations knows no invitation.
+type fakeInvitations struct{ workspace.InvitationRepository }
+
+func (fakeInvitations) PreviewInvitation(context.Context, []byte) (workspace.InvitationPreview, error) {
+	return workspace.InvitationPreview{}, apperror.NotFound("invitation", nil)
+}
+
 type noDirectory struct{}
 
 func (noDirectory) Profiles(context.Context, []uuid.UUID) (map[uuid.UUID]workspace.UserProfile, error) {
@@ -103,6 +111,7 @@ func newRouter(t *testing.T, pingErr error) (*gin.Engine, *bytes.Buffer) {
 	var logs bytes.Buffer
 	users := user.NewService(fakeUsers{})
 	workspaces := workspace.NewService(fakeWorkspaces{}, noDirectory{})
+	invitations := workspace.NewInvitationService(fakeWorkspaces{}, fakeInvitations{}, noDirectory{}, nil, "http://localhost:5173")
 	r, err := httpserver.NewRouter(
 		httpserver.Deps{
 			Logger:        logger.New(&logs, "test", slog.LevelDebug),
@@ -113,7 +122,7 @@ func newRouter(t *testing.T, pingErr error) (*gin.Engine, *bytes.Buffer) {
 		httpserver.Handlers{
 			System:    system.NewHandler(fakePinger{err: pingErr}, "test"),
 			User:      user.NewHandler(users),
-			Workspace: workspace.NewHandler(workspaces),
+			Workspace: workspace.NewHandler(workspaces, invitations),
 		},
 	)
 	require.NoError(t, err)
@@ -300,4 +309,17 @@ func TestMembersCannotRenameTheWorkspace(t *testing.T) {
 
 	require.Equal(t, http.StatusForbidden, rec.Code)
 	assert.Equal(t, "WORKSPACE_ADMIN_REQUIRED", decodeProblem(t, rec.Body).Code)
+}
+
+func TestInvitationTokensNeverReachTheLogs(t *testing.T) {
+	r, logs := newRouter(t, nil)
+	// Built at run time so secret scanners do not mistake a test value for a real key.
+	token := base64.RawURLEncoding.EncodeToString([]byte("nexo-test-token-must-not-leak-32"))
+
+	rec := do(r, http.MethodGet, "/api/v1/invitations/"+token, withToken)
+
+	require.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, "INVITATION_NOT_FOUND", decodeProblem(t, rec.Body).Code)
+	assert.NotContains(t, logs.String(), token)
+	assert.Contains(t, logs.String(), "/api/v1/invitations/[REDACTED]")
 }
