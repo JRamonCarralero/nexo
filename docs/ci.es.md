@@ -97,7 +97,7 @@ Se ejecuta si cambia `backend/` o `api/`. Todos los pasos se ejecutan dentro de 
 | **Lint** | [golangci-lint](https://golangci-lint.run/) con la configuración de [`backend/.golangci.yml`](../backend/.golangci.yml), incluido `depguard`, que limita dónde se pueden importar pgx, Firebase y Gin. |
 | **Tests unitarios** | `go test -race ./...`. Incluye [`arch_test.go`](../backend/arch_test.go), que comprueba las reglas de dependencias entre paquetes (un módulo no importa a otro, solo `internal/app` conoce las implementaciones concretas…). |
 | **Imagen del emulador de Firebase** | Construye `docker/firebase`, que usan los tests de integración. |
-| **Tests de integración** | `go test -race -tags integration ./...`. Levanta un PostgreSQL real y el emulador de Firebase Auth con [testcontainers](https://golang.testcontainers.org/) (los runners de GitHub tienen Docker) y aplica las migraciones. |
+| **Tests de integración** | `go test -race -tags integration ./...`. Levanta un PostgreSQL real, el emulador de Firebase Auth y Mailpit con [testcontainers](https://golang.testcontainers.org/) (los runners de GitHub tienen Docker) y aplica las migraciones. |
 | **Build** | `go build ./cmd/api`. |
 | **Imagen Docker** | Construye la imagen con [`backend/Dockerfile`](../backend/Dockerfile) (todavía no se publica). Asegura que la imagen sigue compilando. |
 

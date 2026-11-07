@@ -32,7 +32,16 @@
     "WORKSPACE_ADMIN_REQUIRED": "Only workspace admins can do this.",
     "MEMBER_NOT_FOUND": "That person is not a member of this workspace.",
     "INVALID_ROLE": "The role is not valid.",
-    "LAST_ADMIN": "A workspace needs at least one admin. Make someone else an admin first."
+    "LAST_ADMIN": "A workspace needs at least one admin. Make someone else an admin first.",
+    "INVALID_EMAIL": "The email address is not valid.",
+    "INVALID_INVITATION_KIND": "The invitation type is not valid.",
+    "LINK_CANNOT_GRANT_ADMIN": "An invitation link cannot grant the admin role. Invite that person by email.",
+    "ALREADY_MEMBER": "That person is already a member of the workspace.",
+    "INVITATION_NOT_FOUND": "The invitation does not exist or is no longer valid.",
+    "INVITATION_EXPIRED": "The invitation has expired. Ask whoever invited you for a new one.",
+    "INVITATION_EMAIL_MISMATCH": "This invitation is for another email address. Sign in with the right account.",
+    "EMAIL_NOT_VERIFIED": "Verify your email address to accept the invitation.",
+    "EMAIL_DELIVERY_FAILED": "The invitation email could not be sent. Please try again in a few minutes."
   },
   "traceId": "Trace code: {{traceId}}"
 }

@@ -29,7 +29,7 @@ setup: ## Install dependencies, tools and git hooks
 ## ---------- Local environment ----------
 
 .PHONY: up
-up: ## Start local services (Postgres) and wait until they are healthy
+up: ## Start local services (Postgres, Firebase Auth emulator, Mailpit) and wait until they are healthy
 	docker compose up -d --wait
 	@$(MAKE) --no-print-directory db-roles
 

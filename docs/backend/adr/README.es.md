@@ -29,6 +29,8 @@ Un ADR recoge una decisión importante: el contexto, qué se decidió, por qué 
 | [0021](0021-realtime-signals.es.md) | Tiempo real mediante documentos de aviso en Firestore | Aceptado (aún no implementado) | 2026-10-22 |
 | [0022](0022-rls-without-force.es.md) | Row-Level Security sin FORCE; el dueño ejecuta las funciones privilegiadas | Aceptado | 2026-10-28 |
 | [0023](0023-workspaces-and-roles.es.md) | Espacios de trabajo, membresías y roles | Aceptado | 2026-10-28 |
+| [0024](0024-invitations.es.md) | Invitaciones por email y por enlace | Aceptado | 2026-11-07 |
+| [0025](0025-email-over-smtp.es.md) | Email por SMTP detrás de una interfaz Mailer | Aceptado | 2026-11-07 |
 
 ## Cómo escribir un ADR nuevo
 

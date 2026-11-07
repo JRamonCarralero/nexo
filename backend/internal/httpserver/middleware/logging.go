@@ -3,10 +3,15 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// secretParams are path parameters whose values are credentials (e.g. an
+// invitation token): they are replaced with "[REDACTED]" in the logged path.
+var secretParams = map[string]bool{"token": true}
 
 // Logging writes exactly one log line per request. Errors are logged here and
 // nowhere else: 4xx as WARN without internals, 5xx as ERROR with code
@@ -24,7 +29,7 @@ func Logging(log *slog.Logger, quietPaths ...string) gin.HandlerFunc {
 		status := c.Writer.Status()
 		attrs := []slog.Attr{
 			slog.String("method", c.Request.Method),
-			slog.String("path", c.Request.URL.Path),
+			slog.String("path", loggablePath(c)),
 			slog.String("route", c.FullPath()),
 			slog.Int("status", status),
 			slog.Duration("latency", time.Since(start)),
@@ -51,4 +56,15 @@ func Logging(log *slog.Logger, quietPaths ...string) gin.HandlerFunc {
 
 		log.LogAttrs(c.Request.Context(), level, msg, attrs...)
 	}
+}
+
+// loggablePath returns the request path with secret parameters masked.
+func loggablePath(c *gin.Context) string {
+	path := c.Request.URL.Path
+	for _, p := range c.Params {
+		if secretParams[p.Key] && p.Value != "" {
+			path = strings.Replace(path, p.Value, "[REDACTED]", 1)
+		}
+	}
+	return path
 }

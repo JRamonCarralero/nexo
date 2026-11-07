@@ -35,5 +35,18 @@ services:
       retries: 20
       start_period: 60s
 
+  mailpit:
+    # Catches every email sent locally. The image must match the SMTP adapter tests.
+    image: axllent/mailpit:v1.33.0
+    container_name: nexo-mailpit
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI: http://localhost:8025
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8025/api/v1/info >/dev/null || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
 volumes:
   postgres-data:

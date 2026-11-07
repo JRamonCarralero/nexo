@@ -36,7 +36,8 @@ Guiding principles:
 | Logging | `log/slog` (standard library) | JSON for Google Cloud Logging |
 | Tests | testify, [mockery](https://vektra.github.io/mockery/) v3, [testcontainers](https://golang.testcontainers.org/) | |
 | Lint | golangci-lint v2 (incl. depguard, staticcheck, revive) | `backend/.golangci.yml` |
-| Planned | sqlc (custom queries), Pub/Sub (events), Firestore (real-time signals), Resend (email), R2 (files) | See ADRs 0015 and 0021 |
+| Email | SMTP (standard library): Mailpit locally, Resend's SMTP relay in production | [ADR-0025](adr/0025-email-over-smtp.md) |
+| Planned | sqlc (custom queries), Pub/Sub (events), Firestore (real-time signals), R2 (files) | See ADRs 0015 and 0021 |
 
 Tools such as oapi-codegen, goose and mockery are declared as Go **tool dependencies** in `go.mod` and run with `go tool <name>`, so every machine uses the same versions.
 
@@ -64,6 +65,7 @@ backend/
 │       ├── apperror/           Application error type
 │       ├── auth/               Authenticator interface (+ firebase/ adapter)
 │       ├── config/             Environment configuration
+│       ├── email/              Mailer interface (+ smtp/ adapter)
 │       ├── database/           Technology-agnostic data contracts (+ postgres/ implementation)
 │       ├── logger/             slog setup and trace id in context
 │       └── scope/              Acting user and workspace in the request context
@@ -100,7 +102,7 @@ The rules, enforced by [`arch_test.go`](../../backend/arch_test.go) on every `ma
 | Modules do not import wiring or HTTP middlewares | No hidden coupling to the transport |
 | `cmd` does not import modules, query or HTTP internals | `main.go` stays thin |
 
-`depguard` (golangci-lint) adds the third-party side: **pgx** only in `platform/database`, `store_postgres.go` files and generated sqlc code; the **Firebase SDK** only in its adapters; **Gin** only in `internal/httpserver` and `cmd`.
+`depguard` (golangci-lint) adds the third-party side: **pgx** only in `platform/database`, `*store_postgres.go` files and generated sqlc code; the **Firebase SDK** only in its adapters; **Gin** only in `internal/httpserver` and `cmd`.
 
 Exception by design: modules may import `platform/database/postgres`, because each module owns its PostgreSQL repository (`store_postgres.go`).
 
@@ -205,6 +207,11 @@ Module `internal/modules/workspace` ([ADR-0023](adr/0023-workspaces-and-roles.md
 | Rename | Admins | `PATCH /workspaces/{id}` |
 | Change a member's role | Admins | `PATCH /workspaces/{id}/members/{userId}` |
 | Remove a member / leave | Admins / oneself | `DELETE /workspaces/{id}/members/{userId}` |
+| Invite by email or create a shareable link | Admins | `POST /workspaces/{id}/invitations` |
+| List / revoke pending invitations | Admins | `GET /workspaces/{id}/invitations`, `DELETE /workspaces/{id}/invitations/{invitationId}` |
+| See an invitation / accept it | Holder of the token, signed in | `GET /invitations/{token}`, `POST /invitations/{token}/accept` |
+
+Invitations ([ADR-0024](adr/0024-invitations.md)): email invitations are single use, expire in 7 days and need an account with the same, verified email; links are reusable for 30 days and never grant admin. Only the token's SHA-256 hash is stored, and tokens never reach the logs.
 
 Every rule is checked twice: by the service (clear error codes) and by PostgreSQL (policies, column privileges and a trigger that keeps at least one admin). Integration tests prove the database enforces them on its own.
 
@@ -220,12 +227,12 @@ Firebase ID token → `Authenticator.VerifyToken` → `nexo_resolve_user` (just-
 
 | Kind | HTTP | Typical codes |
 |---|---|---|
-| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE` |
+| `VALIDATION` | 400 | `INVALID_REQUEST`, `INVALID_CURSOR`, `INVALID_EMAIL`, `REFERENCE_NOT_FOUND`, `INVALID_WORKSPACE_ID`, `INVALID_WORKSPACE_NAME`, `INVALID_ROLE`, `INVALID_INVITATION_KIND`, `LINK_CANNOT_GRANT_ADMIN` |
 | `UNAUTHENTICATED` | 401 | `MISSING_TOKEN`, `INVALID_TOKEN`, `EMAIL_REQUIRED` |
-| `FORBIDDEN` | 403 | `FORBIDDEN` (incl. RLS denials), `WORKSPACE_ADMIN_REQUIRED` |
-| `NOT_FOUND` | 404 | `<RESOURCE>_NOT_FOUND`, `ROUTE_NOT_FOUND` |
-| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN` |
-| `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE` |
+| `FORBIDDEN` | 403 | `FORBIDDEN` (incl. RLS denials), `WORKSPACE_ADMIN_REQUIRED`, `INVITATION_EMAIL_MISMATCH`, `EMAIL_NOT_VERIFIED` |
+| `NOT_FOUND` | 404 | `<RESOURCE>_NOT_FOUND` (e.g. `INVITATION_NOT_FOUND`), `ROUTE_NOT_FOUND` |
+| `CONFLICT` | 409 | `ALREADY_EXISTS`, `EMAIL_IN_USE`, `LAST_ADMIN`, `ALREADY_MEMBER`, `INVITATION_EXPIRED` |
+| `UNAVAILABLE` | 503 | `SERVICE_UNAVAILABLE`, `EMAIL_DELIVERY_FAILED` |
 | `INTERNAL` | 500 | `INTERNAL_ERROR` |
 
 Rules: create errors with the named constructors; wrap causes; return them (never write HTTP responses in modules); codes are part of the public contract and need a frontend translation.
@@ -263,6 +270,11 @@ Read from environment variables; a `.env` file is loaded in local development ([
 | `FIREBASE_PROJECT_ID` | — (required) | `demo-nexo` locally |
 | `FIREBASE_AUTH_EMULATOR_HOST` | — | Local and tests only; refused in production |
 | `BOOTSTRAP_SUPERADMIN_EMAIL` | — | Optional superadmin provisioning |
+| `APP_BASE_URL` | `http://localhost:5173` | Web app URL used in emailed links; must be HTTPS in production |
+| `SMTP_HOST`, `SMTP_PORT` | `localhost`, `1025` | SMTP server (Mailpit locally) |
+| `SMTP_TLS` | `none` | `none`, `starttls` or `tls`; `none` is refused in production |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | — | SMTP credentials (Resend: `resend` and the API key) |
+| `EMAIL_FROM` | `Nexo <no-reply@nexo.local>` | Sender of every email |
 
 ## 15. Startup and shutdown
 
@@ -271,7 +283,7 @@ Read from environment variables; a `.env` file is loaded in local development ([
 ## 16. Database migrations
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, run as the table **owner** (`DB_URL` in the Makefile).
-- Current migrations: `00001` extensions, `00002` `nexo_app` role + RLS helper functions, `00003` users + provisioning functions, `00004` RLS without `FORCE`, `00005` workspaces and memberships.
+- Current migrations: `00001` extensions, `00002` `nexo_app` role + RLS helper functions, `00003` users + provisioning functions, `00004` RLS without `FORCE`, `00005` workspaces and memberships, `00006` invitations.
 - New tenant tables follow the template in [data-access.md](data-access.md#adding-a-tenant-table) (RLS, policy, indexes).
 
 ## 17. Testing
@@ -279,14 +291,14 @@ Read from environment variables; a `.env` file is loaded in local development ([
 | Level | Command | What |
 |---|---|---|
 | Unit | `make test` | Services with mockery mocks, router with fake adapters, `arch_test.go` |
-| Integration | `make test-integration` | PostgreSQL and the Firebase Auth emulator via testcontainers: Store, RLS, column privileges, user provisioning, Firebase adapter |
+| Integration | `make test-integration` | PostgreSQL, the Firebase Auth emulator and Mailpit via testcontainers: Store, RLS, column privileges, user provisioning, invitations, Firebase and SMTP adapters |
 
 Details and conventions in [ADR-0018](adr/0018-testing-strategy.md). Helpers: `pgtest` (database with API-role and owner pools; the owner is **not** a superuser, like in a managed database) and `fbtest` (emulator, sign-up/sign-in, verify email).
 
 ## 18. Local development
 
 ```bash
-make up          # PostgreSQL (5433) + Firebase Auth emulator (9099, UI on 4000) + DB roles
+make up          # PostgreSQL (5433) + Firebase Auth emulator (9099, UI on 4000) + Mailpit (SMTP 1025, UI on 8025) + DB roles
 make db-migrate  # apply migrations
 make dev-api     # API on http://localhost:8080
 make test        # unit tests
@@ -300,11 +312,12 @@ make lint
 | Item | Status | ADR |
 |---|---|---|
 | Workspaces, memberships and the workspace middleware | ✅ Done | [0017](adr/0017-workspace-in-url-path.md), [0023](adr/0023-workspaces-and-roles.md) |
-| Invitations (email and link), Mailer + Mailpit | Next (milestone M0) | — |
+| Invitations (email and link), Mailer + Mailpit | ✅ Done | [0024](adr/0024-invitations.md), [0025](adr/0025-email-over-smtp.md) |
+| Frontend screens, seed data and CLA | Next (milestone M0) | — |
 | Commands, events and transactional outbox | Planned | [0015](adr/0015-commands-and-outbox.md) |
 | sqlc for custom queries | Planned | [0005](adr/0005-data-access-store.md) |
 | `internal/query` read models | Planned | [0002](adr/0002-modular-monolith.md) |
 | Real-time signals via Firestore | Planned | [0021](adr/0021-realtime-signals.md) |
 | Custom fields in JSONB | Phase 2 | [0016](adr/0016-custom-fields-jsonb.md) |
-| Email (Mailer + Mailpit), files (FileStorage + MinIO/R2) | With invitations / attachments | — |
+| Files (FileStorage + MinIO/R2) | With attachments | — |
 | Deployment to Cloud Run (Workload Identity Federation) | Later | — |

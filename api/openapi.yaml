@@ -20,6 +20,8 @@ tags:
     description: Usuarios y sesión
   - name: workspaces
     description: Espacios de trabajo y sus miembros
+  - name: invitations
+    description: Invitaciones para unirse a un espacio de trabajo
 paths:
   /health:
     get:
@@ -209,8 +211,137 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /workspaces/{workspaceId}/invitations:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listInvitations
+      tags: [invitations]
+      summary: Invitaciones pendientes
+      description: Invitaciones por email sin aceptar y enlaces activos, sin caducar ni revocar. Solo administradores.
+      responses:
+        "200":
+          description: Invitaciones pendientes, las más recientes primero
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationList"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createInvitation
+      tags: [invitations]
+      summary: Invitar a alguien
+      description: |
+        Solo administradores.
+        - `email`: envía un correo con el enlace de un solo uso (caduca en 7 días). Volver a invitar al mismo email revoca la invitación anterior.
+        - `link`: devuelve un enlace reutilizable (caduca en 30 días) que **solo se muestra esta vez**. No puede dar el rol `admin`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationInput"
+      responses:
+        "201":
+          description: Invitación creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationCreated"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "503":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /workspaces/{workspaceId}/invitations/{invitationId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: revokeInvitation
+      tags: [invitations]
+      summary: Revocar una invitación
+      description: Solo administradores. La invitación deja de poder aceptarse.
+      responses:
+        "204":
+          description: Invitación revocada
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /invitations/{token}:
+    parameters:
+      - $ref: "#/components/parameters/InvitationToken"
+    get:
+      operationId: getInvitation
+      tags: [invitations]
+      summary: Ver una invitación
+      description: A qué espacio y con qué rol invita el enlace, para la pantalla de confirmación.
+      responses:
+        "200":
+          description: Invitación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationPreview"
+        "404":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /invitations/{token}/accept:
+    parameters:
+      - $ref: "#/components/parameters/InvitationToken"
+    post:
+      operationId: acceptInvitation
+      tags: [invitations]
+      summary: Aceptar una invitación
+      description: |
+        Une al usuario autenticado al espacio de trabajo. Las invitaciones por email
+        exigen que el email de la cuenta coincida y esté verificado. Si el usuario ya
+        es miembro, conserva su rol.
+      responses:
+        "200":
+          description: Espacio de trabajo al que se ha unido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   parameters:
+    InvitationToken:
+      name: token
+      in: path
+      required: true
+      description: El token del enlace de invitación. Nunca aparece en los logs.
+      schema:
+        type: string
     WorkspaceId:
       name: workspaceId
       in: path
@@ -343,6 +474,81 @@ components:
       properties:
         role:
           $ref: "#/components/schemas/Role"
+    InvitationKind:
+      type: string
+      enum: [email, link]
+    InvitationInput:
+      type: object
+      required: [kind, role]
+      properties:
+        kind:
+          $ref: "#/components/schemas/InvitationKind"
+        email:
+          type: string
+          format: email
+          description: Obligatorio cuando `kind` es `email`.
+        role:
+          $ref: "#/components/schemas/Role"
+    Invitation:
+      type: object
+      required: [id, kind, role, expiresAt, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/InvitationKind"
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/Role"
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    InvitationCreated:
+      type: object
+      required: [invitation]
+      properties:
+        invitation:
+          $ref: "#/components/schemas/Invitation"
+        url:
+          type: string
+          description: Solo en las invitaciones por enlace, y solo en esta respuesta.
+    InvitationList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invitation"
+    InvitationPreview:
+      type: object
+      required: [workspaceName, kind, role, invitedBy, expiresAt, status]
+      properties:
+        workspaceName:
+          type: string
+        kind:
+          $ref: "#/components/schemas/InvitationKind"
+        email:
+          type: string
+          format: email
+          description: A quién va dirigida (solo invitaciones por email).
+        role:
+          $ref: "#/components/schemas/Role"
+        invitedBy:
+          type: string
+          description: Nombre de quien invita.
+        expiresAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, expired, revoked, accepted]
     Problem:
       type: object
       description: Error según RFC 9457. `code` es estable y legible por máquina; el frontend lo usa para traducir el mensaje.

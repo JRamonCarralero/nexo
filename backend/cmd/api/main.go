@@ -19,6 +19,7 @@ import (
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/auth/firebase"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/config"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/database/postgres"
+	"github.com/JRamonCarralero/nexo/backend/internal/platform/email/smtp"
 	"github.com/JRamonCarralero/nexo/backend/internal/platform/logger"
 )
 
@@ -57,7 +58,17 @@ func run() error {
 		return err
 	}
 
-	application, err := app.New(app.Deps{Config: cfg, Logger: log, DB: db, Authenticator: authn, Version: version})
+	mailer, err := smtp.New(smtp.Config{
+		Host: cfg.SMTP.Host, Port: cfg.SMTP.Port, Username: cfg.SMTP.Username, Password: cfg.SMTP.Password,
+		TLS: cfg.SMTP.TLS, From: cfg.SMTP.From,
+	})
+	if err != nil {
+		return err
+	}
+
+	application, err := app.New(app.Deps{
+		Config: cfg, Logger: log, DB: db, Authenticator: authn, Mailer: mailer, Version: version,
+	})
 	if err != nil {
 		return err
 	}
