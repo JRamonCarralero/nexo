@@ -16,6 +16,8 @@ An ADR records one significant decision: the context, what was decided, why, and
 | [0008](0008-internationalization.md) | Internationalization with i18next, errors translated by code | Accepted | 2026-10-22 |
 | [0009](0009-testing-strategy.md) | Testing strategy | Accepted (partly implemented) | 2026-10-22 |
 | [0010](0010-node-lts-and-pnpm.md) | Node LTS and pinned pnpm | Accepted | 2026-10-22 |
+| [0011](0011-frontend-authentication.md) | Frontend authentication behind an adapter | Accepted | 2026-11-09 |
+| [0012](0012-ui-primitives-and-forms.md) | Hand-written UI primitives and react-hook-form with Zod | Accepted | 2026-11-09 |
 
 ## Writing a new ADR
 

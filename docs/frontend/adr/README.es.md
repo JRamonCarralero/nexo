@@ -16,6 +16,8 @@ Un ADR recoge una decisión importante: el contexto, qué se decidió, por qué 
 | [0008](0008-internationalization.es.md) | Internacionalización con i18next y errores traducidos por código | Aceptado | 2026-10-22 |
 | [0009](0009-testing-strategy.es.md) | Estrategia de tests | Aceptado (implementado en parte) | 2026-10-22 |
 | [0010](0010-node-lts-and-pnpm.es.md) | Node LTS y pnpm fijado | Aceptado | 2026-10-22 |
+| [0011](0011-frontend-authentication.es.md) | Autenticación del frontend tras un adaptador | Aceptado | 2026-11-09 |
+| [0012](0012-ui-primitives-and-forms.es.md) | Primitivas de UI propias y react-hook-form con Zod | Aceptado | 2026-11-09 |
 
 ## Cómo escribir un ADR nuevo
 

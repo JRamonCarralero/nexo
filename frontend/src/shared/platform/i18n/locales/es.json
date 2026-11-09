@@ -43,5 +43,180 @@
     "EMAIL_NOT_VERIFIED": "Verifica tu dirección de email para aceptar la invitación.",
     "EMAIL_DELIVERY_FAILED": "No se ha podido enviar el email de invitación. Inténtalo de nuevo en unos minutos."
   },
-  "traceId": "Código de seguimiento: {{traceId}}"
+  "traceId": "Código de seguimiento: {{traceId}}",
+  "common": {
+    "loading": "Cargando…",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "areYouSure": "¿Seguro?",
+    "remove": "Quitar",
+    "revoke": "Revocar",
+    "leave": "Salir",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "language": "Idioma",
+    "skipToContent": "Saltar al contenido",
+    "goHome": "Ir al inicio"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "text": "La página que buscas no existe."
+  },
+  "validation": {
+    "required": "Este campo es obligatorio.",
+    "email": "Escribe un email válido.",
+    "passwordMin": "La contraseña debe tener al menos 8 caracteres.",
+    "nameTooLong": "Máximo 100 caracteres."
+  },
+  "roles": {
+    "admin": "Administrador/a",
+    "member": "Miembro",
+    "guest": "Invitado/a"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Inicia sesión",
+      "subtitle": "Accede a tus espacios de trabajo."
+    },
+    "signUp": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Empieza a organizar el trabajo de tu equipo."
+    },
+    "reset": {
+      "title": "Recupera tu contraseña",
+      "subtitle": "Te enviaremos un enlace para elegir una nueva.",
+      "sent": "Si existe una cuenta con ese email, te hemos enviado un enlace para restablecer la contraseña."
+    },
+    "switch": {
+      "toSignUpText": "¿No tienes cuenta?",
+      "toSignUp": "Crear una cuenta",
+      "toSignInText": "¿Ya tienes cuenta?",
+      "toSignIn": "Iniciar sesión"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Contraseña",
+      "passwordHint": "Mínimo 8 caracteres.",
+      "name": "Nombre"
+    },
+    "actions": {
+      "signIn": "Iniciar sesión",
+      "signUp": "Crear cuenta",
+      "google": "Continuar con Google",
+      "forgotPassword": "¿Has olvidado tu contraseña?",
+      "sendReset": "Enviar enlace",
+      "signOut": "Cerrar sesión"
+    },
+    "or": "o",
+    "errors": {
+      "INVALID_CREDENTIALS": "El email o la contraseña no son correctos.",
+      "EMAIL_IN_USE": "Ya existe una cuenta con ese email. Inicia sesión en su lugar.",
+      "WEAK_PASSWORD": "La contraseña es demasiado débil.",
+      "INVALID_EMAIL": "El email no es válido.",
+      "TOO_MANY_REQUESTS": "Demasiados intentos. Inténtalo de nuevo en unos minutos.",
+      "NETWORK": "No se puede conectar. Revisa tu conexión.",
+      "USER_DISABLED": "Esta cuenta está desactivada.",
+      "ACCOUNT_EXISTS_DIFFERENT_CREDENTIAL": "Ya existe una cuenta con ese email que usa otro método de acceso.",
+      "CANCELLED": "Has cancelado el inicio de sesión.",
+      "UNKNOWN": "No se ha podido completar la acción. Inténtalo de nuevo."
+    }
+  },
+  "account": {
+    "verify": {
+      "message": "Verifica tu email ({{email}}): lo necesitas, por ejemplo, para aceptar invitaciones enviadas a esa dirección.",
+      "resend": "Reenviar el email",
+      "check": "Ya lo he verificado",
+      "resent": "Email enviado. Revisa tu bandeja de entrada.",
+      "stillUnverified": "Todavía no consta como verificado. Abre el enlace del email y vuelve a intentarlo.",
+      "failed": "No se ha podido completar la acción. Inténtalo de nuevo."
+    }
+  },
+  "workspaces": {
+    "create": {
+      "title": "Nuevo espacio de trabajo",
+      "subtitle": "Un espacio reúne a las personas y los proyectos de un equipo.",
+      "firstTitle": "Crea tu primer espacio de trabajo",
+      "firstSubtitle": "Un espacio reúne a las personas y los proyectos de un equipo. Podrás invitar a quien quieras después.",
+      "name": "Nombre del espacio",
+      "namePlaceholder": "Equipo de producto",
+      "submit": "Crear espacio"
+    },
+    "switcher": {
+      "label": "Espacio de trabajo",
+      "choose": "Elige un espacio",
+      "new": "+ Nuevo espacio…"
+    },
+    "nav": {
+      "label": "Espacio de trabajo",
+      "home": "Inicio",
+      "members": "Miembros"
+    },
+    "backToMine": "Volver a mis espacios",
+    "home": {
+      "yourRole": "Tu rol: {{role}}",
+      "soonTitle": "Proyectos y tareas, muy pronto",
+      "soonText": "Estamos construyendo los proyectos y las tareas. Mientras tanto, ya puedes reunir a tu equipo.",
+      "teamTitle": "Tu equipo",
+      "teamText": "Mira quién forma parte de este espacio e invita a más personas.",
+      "teamLink": "Ver miembros"
+    },
+    "members": {
+      "title": "Miembros",
+      "subtitle": "Las personas de {{name}}.",
+      "person": "Persona",
+      "role": "Rol",
+      "joined": "Desde",
+      "actions": "Acciones",
+      "you": "(tú)",
+      "changeRoleOf": "Cambiar el rol de {{name}}",
+      "removeLabel": "Quitar a {{name}}",
+      "leaveLabel": "Salir de {{workspace}}"
+    }
+  },
+  "invitations": {
+    "title": "Invitar personas",
+    "subtitle": "Invita por email o crea un enlace para compartir.",
+    "form": {
+      "kind": "¿Cómo quieres invitar?",
+      "kinds": {
+        "email": "Por email",
+        "link": "Con un enlace"
+      },
+      "email": "Email de la persona",
+      "role": "Rol",
+      "linkRoleHint": "Un enlace no puede dar el rol de administrador: invita por email a quien deba serlo.",
+      "linkNoAdmin": "Un enlace no puede dar el rol de administrador.",
+      "sendEmail": "Enviar invitación",
+      "createLink": "Crear enlace"
+    },
+    "created": {
+      "email": "Invitación enviada a {{email}}.",
+      "linkTitle": "Enlace creado",
+      "linkWarning": "Cópialo ahora: por seguridad no se volverá a mostrar. Quien lo tenga podrá unirse al espacio.",
+      "linkLabel": "Enlace de invitación"
+    },
+    "pending": {
+      "title": "Invitaciones pendientes",
+      "empty": "No hay invitaciones pendientes.",
+      "linkItem": "Enlace de invitación",
+      "expires": "caduca el {{date}}",
+      "revokeLabel": "Revocar la invitación de {{name}}"
+    },
+    "accept": {
+      "title": "Te han invitado a {{workspace}}",
+      "text": "{{inviter}} te invita a unirte como {{role}}.",
+      "textAnonymous": "Te invitan a unirte como {{role}}.",
+      "wrongAccount": "Esta invitación es para {{invited}}, pero has iniciado sesión como {{current}}.",
+      "switchAccount": "Usar otra cuenta",
+      "button": "Unirme al espacio",
+      "unavailableTitle": "Invitación a {{workspace}}",
+      "status": {
+        "pending": "La invitación está pendiente.",
+        "expired": "Esta invitación ha caducado. Pide una nueva a quien te invitó.",
+        "revoked": "Esta invitación ha sido revocada.",
+        "accepted": "Esta invitación ya se ha utilizado."
+      }
+    }
+  }
 }
