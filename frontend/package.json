@@ -64,6 +64,9 @@
     "node": ">=24.15"
   },
   "pnpm": {
+    "overrides": {
+      "@grpc/grpc-js": ">=1.13.6"
+    },
     "onlyBuiltDependencies": [
       "esbuild"
     ]
