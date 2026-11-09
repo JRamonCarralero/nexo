@@ -17,12 +17,18 @@
     "generate": "orval --config orval.config.ts && tsr generate"
   },
   "dependencies": {
+    "@hookform/resolvers": "^7.0.5",
     "@tanstack/react-query": "^5.105.3",
     "@tanstack/react-router": "^1.170.46",
+    "clsx": "^2.1.1",
+    "firebase": "^13.2.0",
     "i18next": "^26.7.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-hook-form": "^7.91.0",
     "react-i18next": "^17.1.11",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
@@ -58,6 +64,9 @@
     "node": ">=24.15"
   },
   "pnpm": {
+    "overrides": {
+      "@grpc/grpc-js": ">=1.13.6"
+    },
     "onlyBuiltDependencies": [
       "esbuild"
     ]

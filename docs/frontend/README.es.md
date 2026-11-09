@@ -2,49 +2,49 @@
 
 [English](README.md) · **Español**
 
-Cómo está construida la aplicación web de Nexo: tecnologías, estructura, cómo llegan los datos de la API a la pantalla y las reglas que la mantienen coherente. El *porqué* de cada decisión está en el [registro de decisiones de arquitectura (ADR)](adr/README.es.md).
+Cómo está construida la aplicación web de Nexo: tecnologías, estructura, cómo llegan los datos de la API a la pantalla, cómo funciona la autenticación y las reglas que la mantienen coherente. El *porqué* de cada decisión está en el [registro de decisiones de arquitectura (ADR)](adr/README.es.md).
 
-> **Estado:** hoy el frontend es un esqueleto (una página que indica si la API responde). Los cimientos que se describen aquí ya están montados; las primeras pantallas reales (inicio de sesión, alta del espacio de trabajo, invitaciones) llegan al final del hito M0. Lo marcado como *previsto* está decidido pero aún no construido.
+> **Estado:** la app cubre todo el primer hito: inicio de sesión y registro (email/contraseña y Google), crear y cambiar de espacio de trabajo, los miembros de un espacio con sus roles y las invitaciones (por email y por enlace). Proyectos y tareas llegan en el hito M1. Lo marcado como *previsto* está decidido pero aún no construido.
 
-**Relacionado:** [Arquitectura del backend](../backend/README.es.md) · [CI](../ci.es.md)
+**Relacionado:** [Arquitectura del backend](../backend/README.es.md) · [Autenticación y usuarios (backend)](../backend/auth.es.md) · [CI](../ci.es.md)
 
 ---
 
 ## 1. Visión general
 
-Una **aplicación de una sola página en React**, construida con **Vite** y servida como ficheros estáticos. Solo habla con la API de Nexo, mediante un **cliente generado a partir del contrato OpenAPI**; guarda los datos del servidor en **TanStack Query**, gestiona las rutas con **TanStack Router** y es **bilingüe** (español e inglés) desde el principio.
+Una **aplicación de una sola página en React**, construida con **Vite** y servida como ficheros estáticos. Habla solo con la API de Nexo mediante un **cliente generado desde el contrato OpenAPI**, guarda los datos del servidor en **TanStack Query**, enruta con **TanStack Router**, autentica con **Firebase Authentication** tras un adaptador y es **bilingüe** (español e inglés) desde el principio.
 
 Principios (de la visión del producto):
 
-| Principio | Qué significa para el frontend |
+| Principio | Qué implica para el frontend |
 |---|---|
-| **La rapidez es una funcionalidad** | Actualizaciones optimistas, datos del servidor en caché, código dividido por rutas |
-| **Teclado primero, ratón también** | Cada acción tiene atajo y una paleta de comandos (`Ctrl+K`), pero nada *exige* conocer atajos |
-| **Todo es enlazable** | Las vistas y los filtros viven en la URL, con parámetros de búsqueda tipados |
-| **Simple por defecto** | La configuración nunca se interpone en el flujo principal |
-| **El lenguaje de todos** | «Tareas» y «proyectos», sin jerga; español e inglés |
-| **Accesible** | Navegación por teclado y contraste AA; primitivas de Radix |
+| **La velocidad es una funcionalidad** | Estado del servidor en caché, carga de código por ruta; actualizaciones optimistas *(previsto)* |
+| **Teclado primero, ratón también** | Todo funciona con teclado; atajos y paleta de comandos (`Ctrl+K`) *(previsto)* |
+| **Todo es enlazable** | Las vistas viven en la URL, con parámetros tipados |
+| **Simple por defecto** | La configuración nunca estorba al flujo principal |
+| **El idioma de cada persona** | «Tareas» y «proyectos», no jerga; español e inglés, cambiables en cualquier momento |
+| **Accesible** | Campos con etiqueta, errores anunciados, foco visible, enlace para saltar al contenido, navegación por teclado |
 
-## 2. Tecnologías
+## 2. Stack tecnológico
 
 | Aspecto | Tecnología | Estado |
 |---|---|---|
-| Librería de interfaz | React 19 | ✅ |
-| Herramienta de build / servidor de desarrollo | Vite 8 | ✅ |
+| Librería de UI | React 19 | ✅ |
+| Build / servidor de desarrollo | Vite 8 | ✅ |
 | Lenguaje | TypeScript 6, estricto | ✅ |
-| Rutas | TanStack Router (basado en ficheros) | ✅ |
+| Enrutado | TanStack Router (basado en ficheros) | ✅ |
 | Estado del servidor | TanStack Query 5 | ✅ |
-| Estado de la interfaz | Zustand 5 | ✅ (instalado; se usa cuando haga falta) |
+| Estado de UI | Zustand 5 | ✅ (instalado, se usará cuando haga falta) |
 | Cliente de la API | orval (generado desde `api/openapi.yaml`) | ✅ |
-| Estilos | Tailwind CSS 4 | ✅ |
-| Componentes | shadcn/ui (Radix), dnd-kit, cmdk | *previsto* |
-| Idiomas | i18next + react-i18next | ✅ |
-| Formularios | react-hook-form + Zod | *previsto* |
-| Autenticación | SDK JS de Firebase Auth (detrás de un adaptador) | *previsto* |
-| Tests unitarios y de componentes | Vitest + Testing Library (jsdom) | ✅ |
-| De punta a punta / accesibilidad | Playwright + axe, MSW | *previsto* |
+| Autenticación | SDK JS de Firebase Auth (modular), tras un adaptador | ✅ |
+| Formularios y validación | react-hook-form + Zod | ✅ |
+| Estilos | Tailwind CSS 4 + componentes pequeños propios en `shared/ui` | ✅ |
+| Overlays accesibles (diálogos, menús), arrastrar y soltar, paleta de comandos | Primitivas de Radix, dnd-kit, cmdk | *previsto* (cuando una pantalla lo necesite) |
+| i18n | i18next + react-i18next | ✅ |
+| Tests unitarios/de componentes | Vitest + Testing Library (jsdom) | ✅ |
+| End-to-end / accesibilidad | Playwright + axe | *previsto* |
 | Lint / formato | ESLint 10 (typescript-eslint), Prettier (+ plugin de Tailwind) | ✅ |
-| Entorno / gestor de paquetes | Node 24 LTS (`.nvmrc`), pnpm (fijado en `package.json`) | ✅ |
+| Runtime / gestor de paquetes | Node 24 LTS (`.nvmrc`), pnpm (fijado en `package.json`) | ✅ |
 
 ## 3. Estructura del proyecto
 
@@ -52,162 +52,218 @@ Principios (de la visión del producto):
 frontend/
 ├── index.html
 ├── vite.config.ts          Plugins (router, React, Tailwind), alias `@`, proxy de desarrollo, Vitest
-├── orval.config.ts         Generación del cliente de la API
-├── tsr.config.json         Generación del árbol de rutas (misma configuración que el plugin de Vite)
-├── eslint.config.js        Reglas de lint, incluidas las fronteras de imports
+├── orval.config.ts         Generación del cliente de la API (+ Prettier sobre la salida)
+├── tsr.config.json         Generación del árbol de rutas (mismos ajustes que el plugin de Vite)
+├── eslint.config.js        Reglas de lint, incluidos los límites de importación
 └── src/
-    ├── main.tsx            Monta la aplicación y carga i18n y estilos
-    ├── styles.css          Punto de entrada de Tailwind
+    ├── main.tsx            El único sitio donde se crea el proveedor de identidad
     ├── app/
-    │   ├── App.tsx         Providers: QueryClient y Router
-    │   ├── query-client.ts Valores por defecto de TanStack Query (reintentos, tiempo de caché)
-    │   ├── router.ts       Instancia del router y su contexto (QueryClient)
-    │   ├── routes/         Rutas basadas en ficheros (__root.tsx, index.tsx…)
-    │   └── routeTree.gen.ts   Generado: no se edita
-    ├── features/           Una carpeta por funcionalidad; su API pública en index.ts
-    │   └── system/         HealthStatus (indicador de conexión con la API)
+    │   ├── App.tsx         Providers, proveedor de token del cliente API, vaciado de caché al cambiar de usuario
+    │   ├── AppShell.tsx    Cabecera, navegación del espacio y marco de las páginas con sesión
+    │   ├── CenteredLayout.tsx   Marco sencillo para inicio de sesión e invitaciones
+    │   ├── guards.ts       Guards de ruta (requireAuth, redirectIfSignedIn)
+    │   ├── safe-redirect.ts     Valida la redirección posterior al login (sin redirecciones abiertas)
+    │   ├── router.ts       Instancia del router y contexto (QueryClient, auth)
+    │   ├── query-client.ts Valores por defecto de TanStack Query
+    │   ├── routes/         Rutas por ficheros: finas, renderizan una feature
+    │   └── routeTree.gen.ts     Generado: no editar
+    ├── features/           Una carpeta por feature; API pública mediante index.ts
+    │   ├── account/        Aviso de verificación, selector de idioma, menú de usuario
+    │   ├── auth/           Página de inicio de sesión / registro / recuperar contraseña
+    │   ├── invitations/    Formulario de invitar, invitaciones pendientes, página de aceptar
+    │   ├── system/         Indicador de conexión con la API
+    │   └── workspaces/     Crear, cambiar, inicio, miembros
     ├── shared/
-    │   ├── api/
-    │   │   ├── generated/  Generado por orval: no se edita
-    │   │   ├── http-client.ts      Mutator de las peticiones y ApiError
-    │   │   └── use-error-message.ts  Código de error → mensaje traducido
+    │   ├── api/            Cliente generado, mutator HTTP (token, ApiError), mensajes de error
     │   ├── platform/       Adaptadores a servicios de terceros
-    │   │   └── i18n/       Configuración de i18next y textos (es, en)
-    │   └── ui/             Componentes compartidos (shadcn/ui, previsto)
-    └── test/               Configuración y utilidades de los tests
+    │   │   ├── auth/       Interfaz AuthService + implementación Firebase + bindings de React
+    │   │   └── i18n/       Configuración de i18next y locales (es, en)
+    │   ├── ui/             Button, Input, Select, Field, Alert, Card, Spinner
+    │   ├── forms.ts · format.ts · roles.ts · storage.ts   Utilidades compartidas pequeñas
+    └── test/               Auth falso, API falsa, fixtures, renderApp
 ```
 
 **¿Dónde va el código nuevo?**
 
-| Si es… | Va en |
+| Es… | Va en |
 |---|---|
-| Una pantalla o un comportamiento de un área del producto (tablero, tareas, invitaciones) | `features/<funcionalidad>/` |
-| Una URL | `app/routes/`, ligera: solo renderiza un componente de una funcionalidad |
+| Una pantalla o comportamiento de un área del producto (tablero, tareas, invitaciones) | `features/<feature>/` |
+| Una URL | `app/routes/` — fina: renderiza un componente de una feature |
 | Un componente visual reutilizable sin conocimiento de negocio | `shared/ui/` |
-| El acceso a un SDK de terceros (Firebase, analítica…) | `shared/platform/<servicio>/` |
-| Una llamada a la API | En ningún sitio a mano: se usan los hooks generados de `shared/api/generated` |
+| Acceso a un SDK de terceros (Firebase, analítica…) | `shared/platform/<servicio>/` |
+| Una llamada a la API | En ningún sitio a mano: usa los hooks generados de `shared/api/generated` |
+
+Las features nunca importan las partes internas de otra, solo su `index.ts`; y dos features no deben depender una de otra en círculo (lo compartido va a `shared/`).
 
 ## 4. Arranque y providers
 
-`main.tsx` importa la configuración de i18n y los estilos, y renderiza `<App />`. `App` crea **un `QueryClient`** y **un router** por instancia de la aplicación y los proporciona:
+`main.tsx` crea el **servicio de auth** (`createFirebaseAuth(readFirebaseConfig())`) y renderiza `<App auth={auth} />`. `App`:
 
-- **Valores por defecto de las consultas** (`query-client.ts`): `staleTime` de 30 s; **los errores 4xx no se reintentan** (no se van a arreglar solos), y los errores de red y 5xx se reintentan hasta dos veces.
-- **El contexto del router** lleva el `QueryClient`, para que las rutas puedan precargar datos.
-- **Las devtools** del router y de TanStack Query solo se muestran en desarrollo.
+- crea **un `QueryClient`** y **un router** (el contexto del router lleva el `QueryClient` y el servicio de auth);
+- registra el **proveedor de token** del cliente de la API, para que cada petición lleve el ID token;
+- **vacía la caché de consultas cuando cambia la cuenta con sesión** (inicio, cierre, cambio de cuenta), para que nadie vea datos en caché de otra persona;
+- lo envuelve todo en `AuthProvider` y `QueryClientProvider`.
 
-## 5. Rutas
+Valores por defecto de las consultas: `staleTime` de 30 s; **los errores 4xx no se reintentan**; los de red y 5xx se reintentan hasta dos veces. Las devtools solo se renderizan en desarrollo.
 
-- Las rutas son **ficheros** en `src/app/routes`: `index.tsx` es `/` y `__root.tsx` es el layout que lo envuelve todo. Las carpetas anidadas y los ficheros `$param` crean rutas anidadas y dinámicas.
-- El plugin del router genera `routeTree.gen.ts` (en desarrollo y al compilar; `pnpm generate` ejecuta `tsr generate` para el CI). Cada ruta se **divide en su propio trozo de código** automáticamente.
-- Los parámetros y los **parámetros de búsqueda están tipados**: los filtros y las vistas se guardarán en la URL para que todo sea enlazable.
-- Los ficheros de ruta son ligeros: declaran la ruta y renderizan un componente de una funcionalidad.
+## 5. Rutas y guards
 
-## 6. Comunicación con la API
+| Ruta | Página | Acceso |
+|---|---|---|
+| `/login?redirect=…` | Iniciar sesión, crear cuenta, recuperar contraseña | Pública; quien ya tiene sesión pasa a `redirect` |
+| `/invitations/$token` | Ver y aceptar una invitación | Requiere sesión |
+| `/` | Lleva al último espacio usado, al primero, o a crear el primero | Requiere sesión |
+| `/workspaces/new` | Crear un espacio de trabajo | Requiere sesión |
+| `/workspaces/$workspaceId` | Inicio del espacio | Miembro |
+| `/workspaces/$workspaceId/members` | Miembros, roles e invitaciones | Miembro (gestionar: administradores) |
+
+- Las rutas son **ficheros** en `src/app/routes`; `_app.tsx` es un *layout sin ruta* que envuelve todas las páginas con sesión con el `AppShell` y el guard. El plugin del router genera `routeTree.gen.ts`; cada ruta se **divide en chunks** automáticamente.
+- Los **guards** (`guards.ts`) se ejecutan en `beforeLoad`: esperan al estado inicial de autenticación y redirigen a quien no tiene sesión a `/login?redirect=<a dónde iba>`.
+- **`safeRedirect`** solo acepta rutas de esta app en el parámetro `redirect`: `https://evil.example`, `//evil.example`, barras invertidas y caracteres de control se ignoran. Sin esto, un enlace de login manipulado podría enviar a un sitio malicioso justo después de autenticarse.
+- Las páginas de un espacio las envuelve `WorkspaceLayout`, que carga el espacio una vez, explica el error si la persona no puede abrirlo (la API responde 404 a quien no es miembro) y lo recuerda como el último usado.
+
+## 6. Autenticación
 
 ```mermaid
 flowchart LR
-    contract["api/openapi.yaml"] -->|orval| gen["shared/api/generated<br/>tipos + funciones + hooks"]
+    ui["Pantallas<br/>(features/auth, account)"] --> svc["AuthService<br/>(interfaz)"]
+    svc --> fb["Adaptador Firebase<br/>shared/platform/auth/firebase.ts"]
+    fb --> sdk["Firebase Auth<br/>(emulador en local)"]
+    app["App.tsx"] -->|"setTokenProvider"| http["http-client.ts"]
+    http -->|"Authorization: Bearer ID token"| api["API de Nexo"]
+    svc -.->|"getIdToken()"| http
+```
+
+- **`AuthService`** (`shared/platform/auth/types.ts`) es todo lo que la app necesita de un proveedor de identidad: el estado (`getSnapshot`/`subscribe`, usado con `useAuth()` y `useSyncExternalStore`), `ready()`, `getIdToken()` y las acciones (inicio/alta con contraseña, Google, cierre de sesión, recuperar contraseña, email de verificación, `refreshUser`). Solo `firebase.ts` importa el SDK (ESLint lo impone).
+- **El alta** crea la cuenta, fija el nombre, obtiene un **token nuevo que ya lleva el nombre** y envía el **email de verificación**. La API crea el perfil del usuario en la primera petición autenticada, así que no hay que llamar a nada más.
+- **Los errores** se traducen de los códigos del SDK a los nuestros (`INVALID_CREDENTIALS`, `EMAIL_IN_USE`, …); la UI muestra `auth.errors.<CODE>`. Cerrar la ventana de Google no es un error.
+- **Verificación del email:** quien se registra con contraseña ve un aviso hasta que verifica. Importa porque **aceptar una invitación por email exige un email verificado**. «Ya lo he verificado» recarga la cuenta *y renueva el token*, porque la API lee `email_verified` del token.
+- **Token hacia la API:** el cliente HTTP pide el ID token al proveedor en cada petición. Si la API responde `INVALID_TOKEN` (token caducado), pide un **token nuevo y reintenta una vez**.
+- **Cerrar sesión** lleva a `/login` y vacía la caché.
+
+## 7. Hablar con la API
+
+```mermaid
+flowchart LR
+    contract["api/openapi.yaml"] -->|orval| gen["shared/api/generated<br/>tipos + fetchers + hooks"]
     gen --> mutator["http-client.ts<br/>(mutator)"]
     mutator -->|"fetch /api/v1/…"| api["API de Nexo"]
     mutator -->|no 2xx| err["ApiError<br/>code · status · traceId"]
-    gen --> comp["componentes de funcionalidades<br/>useGetMe(), useGetHealth()…"]
+    gen --> comp["componentes de las features<br/>useListMembers(), useCreateInvitation()…"]
 ```
 
-- **Nunca se escriben a mano llamadas ni tipos de la API.** `pnpm generate` (o `make generate`) regenera el cliente a partir del contrato; el CI falla si no está al día.
-- Cada operación genera una función de petición y un hook de TanStack Query (p. ej. `useGetHealth`, `useGetMe`).
-- Todas las peticiones pasan por **un único mutator** ([`http-client.ts`](../../frontend/src/shared/api/http-client.ts)):
-  - si va bien → devuelve el cuerpo ya interpretado;
-  - si la respuesta es Problem Details → lanza **`ApiError`** con el `code`, el `status`, el `traceId` y el `problem` completo del backend;
-  - si el cuerpo de error es otro → `ApiError` con `UNEXPECTED_RESPONSE`;
-  - si falla la red → `ApiError` con `NETWORK_ERROR` y estado 0; las peticiones canceladas se relanzan sin tocar.
-- `ApiError` es el tipo de error de todos los hooks generados, así que `error.code` y `error.traceId` están tipados.
-- En desarrollo, Vite redirige `/api` a `http://localhost:8080`: mismo origen, sin CORS.
-- *Previsto:* el adaptador de autenticación añadirá el ID token de Firebase a cada petición; los avisos en tiempo real invalidarán las consultas afectadas; las modificaciones usarán actualizaciones optimistas.
+- **Nunca escribas llamadas fetch ni tipos de la API a mano.** `pnpm generate` (o `make generate`) regenera el cliente desde el contrato y lo formatea; el CI falla si está desactualizado.
+- Cada operación produce un fetcher y un hook de TanStack Query. Tras una mutación, las features invalidan las consultas afectadas con los helpers generados `get…QueryKey()`.
+- Todas las peticiones pasan por **un único mutator** ([`http-client.ts`](../../frontend/src/shared/api/http-client.ts)): añade el token y devuelve el cuerpo ya interpretado, o lanza **`ApiError`** con el `code` del backend, el `status`, el `traceId` y el `problem` completo (`UNEXPECTED_RESPONSE` para otros cuerpos de error, `NETWORK_ERROR` con status 0 si no se puede enviar; las peticiones abortadas se relanzan sin tocar).
+- En desarrollo, Vite hace de proxy de `/api` hacia `http://localhost:8080`: mismo origen, sin CORS.
 
-## 7. Errores y traducciones
+## 8. Errores y traducciones
 
-- Los textos están en `shared/platform/i18n/locales/{es,en}.json`. El idioma se toma del navegador (español si empieza por `es`; si no, inglés).
-- **Los errores del backend se traducen por su código**: `useErrorMessage()` convierte un `ApiError` en `t('errors.<CODE>')`, con un mensaje genérico de respaldo. Cada código nuevo del backend necesita su entrada en los dos ficheros de idioma.
-- Las pantallas de error muestran el **código de seguimiento** (`traceId`) para que el usuario pueda comunicarlo y se encuentre la línea exacta del log.
-- *Previsto:* los errores de validación de formularios (`errors[]` en Problem Details) se asignarán a cada campo con react-hook-form.
+- Los mensajes viven en `shared/platform/i18n/locales/{es,en}.json`. El idioma es el que eligió la persona (se recuerda en `localStorage` y el atributo `lang` de la página lo sigue) o, la primera vez, el del navegador (español si empieza por `es`).
+- **Los errores del backend se traducen por su código**: `useErrorMessage()` convierte un `ApiError` en `t('errors.<CODE>')`, con un mensaje genérico de respaldo. Cada código nuevo del backend necesita una entrada en ambos ficheros.
+- Las pantallas de error pueden mostrar el **código de traza** (`traceId`) para que los usuarios lo comuniquen y el equipo encuentre la línea exacta del log.
 
-## 8. Gestión del estado
+## 9. Formularios
+
+- **react-hook-form + Zod** (`zodResolver`). Los esquemas usan **claves de traducción como mensajes de error** (`'validation.required'`), y `useFieldError()` las traduce al mostrarse, así los mensajes siguen el idioma actual.
+- `Field` (en `shared/ui`) pinta la etiqueta, el control, una ayuda y el error, conectados con `id`, `aria-invalid` y `aria-describedby`; los errores se anuncian con `role="alert"`.
+- Los errores del servidor (un `Problem`) se muestran en un `Alert` sobre el formulario.
+- La validación en el formulario es una comodidad: la API valida de nuevo y tiene la última palabra.
+
+## 10. Gestión de estado
 
 | Estado | Dónde | Ejemplo |
 |---|---|---|
-| Datos del servidor | TanStack Query (hooks generados) | tareas, proyectos, el usuario actual |
-| Estado de la URL | Parámetros de búsqueda de TanStack Router | filtros, vista seleccionada, tarea abierta |
-| Estado de interfaz compartido | Store de Zustand | paleta de comandos abierta, barra lateral plegada |
-| Estado de interfaz local | `useState` en el componente | un desplegable abierto |
+| Datos del servidor | TanStack Query (hooks generados) | espacios, miembros, invitaciones, el usuario actual |
+| Autenticación | `AuthService` (vía `useAuth()`) | quién tiene sesión, email verificado |
+| Estado en la URL | Parámetros del router | espacio actual, `redirect` |
+| Estado de UI compartido | Store de Zustand *(previsto)* | paleta de comandos abierta, barra lateral plegada |
+| Estado de UI local | `useState` en el componente | una confirmación visible |
+| Comodidades por persona | `localStorage` con `safeStorage` | idioma, último espacio |
 
-Los datos del servidor **nunca se copian** a Zustand ni al estado de un componente: se leen de la caché de consultas.
+Los datos del servidor **nunca se copian** a Zustand ni al estado de un componente: se leen de la caché de consultas. `safeStorage` nunca lanza (puede no estar disponible o estar lleno) y nada que deba persistir de verdad vive ahí.
 
-## 9. Estilos y componentes
+## 11. Estilos y componentes de UI
 
-- **Tailwind CSS 4** mediante su plugin de Vite; Prettier ordena las clases.
-- *Previsto:* componentes de **shadcn/ui** (primitivas de Radix) copiados en `shared/ui`, **dnd-kit** para el tablero, **cmdk** para la paleta de comandos y diálogos y menús accesibles basados en Radix.
-- La accesibilidad es un requisito: todo accesible por teclado, foco visible, contraste AA y `role`/ARIA donde haga falta (el indicador de conexión ya usa `role="status"`/`"alert"`).
+- **Tailwind CSS 4** mediante su plugin de Vite; Prettier ordena las clases; `cn()` (clsx + tailwind-merge) las une.
+- **`shared/ui`** contiene componentes pequeños propios al estilo shadcn: `Button` (variantes, `loading`), `Input`, `Select` (nativo), `Field`, `Alert`, `Card`, `Spinner`. Radix, dnd-kit y cmdk se añadirán cuando una pantalla necesite un diálogo, un menú, arrastrar y soltar o la paleta de comandos ([ADR-0012](adr/0012-ui-primitives-and-forms.es.md)).
+- **La accesibilidad es un requisito:** todo control tiene etiqueta, los errores se anuncian, el foco es visible, hay un enlace de *saltar al contenido*, se prefieren los controles nativos, las acciones destructivas piden confirmación y el diseño funciona desde 375 px de ancho (las tablas se desplazan dentro de su tarjeta).
 
-## 10. Adaptadores de plataforma y reglas de imports
+## 12. Adaptadores de plataforma y reglas de importación
 
 Los servicios de terceros se envuelven en `shared/platform`, igual que los adaptadores del backend ([ADR-0006](adr/0006-feature-structure-and-adapters.es.md)):
 
 | Adaptador | Estado |
 |---|---|
 | `i18n` (i18next) | ✅ |
-| `auth` (Firebase Auth: inicio de sesión, token, sesión actual) | *previsto* (hito M0) |
-| `realtime` (escucha de avisos de Firestore → invalidación de consultas) | *previsto* |
+| `auth` (Firebase Auth) | ✅ ([ADR-0011](adr/0011-frontend-authentication.es.md)) |
+| `realtime` (señales de Firestore → invalidación de consultas) | *previsto* |
 
-ESLint hace cumplir las fronteras:
+ESLint impone los límites:
 
 - importar `firebase` fuera de `src/shared/platform/**` es un **error**;
-- importar las partes internas de una funcionalidad (`@/features/x/y`) en lugar de su `index.ts` es un **error**;
-- los ficheros generados quedan fuera del lint; el cliente de la API se formatea con Prettier justo después de generarlo (hook de orval), para que los cambios de contrato den diferencias limpias.
+- importar las partes internas de una feature (`@/features/x/y`) en vez de su `index.ts` público es un **error**;
+- los ficheros generados se excluyen del lint; el cliente de la API se formatea con Prettier justo tras generarlo (hook de orval), así los cambios de contrato producen diffs limpios.
 
-## 11. Configuración
+## 13. Configuración
 
-- `vite.config.ts`: servidor de desarrollo en el puerto 5173, proxy de `/api` a `localhost:8080`, `@` → `src`.
-- *Previsto:* la configuración pública de compilación como variables `VITE_*` (configuración web de Firebase, dirección del emulador). Los secretos nunca viven en el frontend.
+Ajustes públicos de compilación, como variables `VITE_*` ([`frontend/.env.example`](../../frontend/.env.example)):
 
-## 12. Tests
-
-| Nivel | Herramienta | Estado |
-|---|---|---|
-| Unidades y componentes | Vitest + Testing Library + jsdom; `fetch` simulado; utilidad `renderWithProviders` | ✅ |
-| Simulación de la API para tests de componentes más completos | MSW con mocks generados por orval | *previsto* |
-| De punta a punta y accesibilidad | Playwright + axe contra Docker Compose con datos de prueba | *previsto* (con el primer flujo real) |
-
-Los tests se escriben desde el punto de vista del usuario (textos, roles), no de los detalles de implementación. La configuración carga i18n en español para que las comprobaciones usen los mensajes reales.
-
-## 13. Controles de calidad
-
-| Comando | Qué hace |
+| Variable | Descripción |
 |---|---|
-| `pnpm lint` | ESLint, incluidas las fronteras de imports |
-| `pnpm format:check` | Prettier |
-| `pnpm typecheck` | `tsc -b` |
+| `VITE_FIREBASE_API_KEY` | Clave web de Firebase (no es secreta). Obligatoria en builds de producción |
+| `VITE_FIREBASE_PROJECT_ID` | Proyecto de Firebase. Obligatoria en builds de producción |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Opcional; necesaria para la ventana de Google en producción |
+| `VITE_FIREBASE_AUTH_EMULATOR_URL` | Emulador de Auth. En desarrollo vale `http://localhost:9099` por defecto; **una build de producción se niega a arrancar con ella** (el emulador acepta tokens sin firmar) |
+
+En desarrollo no hay que configurar nada: todo apunta por defecto al emulador local (`make up`). Los secretos nunca viven en el frontend.
+
+`vite.config.ts`: servidor de desarrollo en el puerto 5173, proxy de `/api` a `localhost:8080`, `@` → `src`.
+
+## 14. Tests
+
+| Nivel | Herramienta | Qué |
+|---|---|---|
+| Unidades y componentes | Vitest + Testing Library + jsdom | El cliente HTTP (token, reintento), la configuración, el mapeo de errores, `safeRedirect` |
+| Pantallas y flujos | Lo mismo, con el **router y los guards reales** | Inicio/alta, crear espacio, miembros, invitaciones, aviso de verificación, idioma |
+| End-to-end y accesibilidad | Playwright + axe contra Docker Compose con datos de ejemplo | *previsto* |
+
+Utilidades en `src/test`: **`createFakeAuth()`** (un `AuthService` que registra cada acción), **`mockApi()`** (sustituye `fetch` por una API falsa indexada por `"MÉTODO /ruta"` y registra las peticiones inesperadas), **fixtures** y **`renderApp({ path, auth })`**, que monta toda la app sobre un historial en memoria. Los tests se escriben desde el punto de vista de quien usa la app (etiquetas, roles, textos), no de los detalles de implementación, y se ejecutan en español.
+
+## 15. Controles de calidad
+
+| Comando | Qué |
+|---|---|
+| `pnpm lint` | ESLint, con límites de importación y comprobaciones de React Compiler |
+| `pnpm format:check` | Prettier (incluido el cliente generado) |
+| `pnpm typecheck` | `tsc -b` (tests incluidos) |
 | `pnpm test` | Vitest |
-| `pnpm build` | Paquete de producción |
+| `pnpm build` | Bundle de producción |
 | `pnpm generate` | Cliente de la API + árbol de rutas (el CI comprueba que están al día) |
 
-Todos se ejecutan en el CI en los pull requests que tocan `frontend/` o `api/`. Los ganchos de git (lefthook) pasan ESLint y Prettier sobre los ficheros del commit.
+Todos corren en el CI en los pull requests que tocan `frontend/` o `api/`. Los hooks de git (lefthook) ejecutan ESLint y Prettier sobre los ficheros en stage.
 
-## 14. Desarrollo local
+## 16. Desarrollo local
 
 ```bash
-nvm use            # Node 24 según .nvmrc
-make up            # servicios del backend (PostgreSQL, emulador de Firebase)
+nvm use            # Node 24 de .nvmrc
+make up            # PostgreSQL, emulador de Firebase Auth, Mailpit
 make dev-api       # API en :8080
 make dev-web       # web en http://localhost:5173
 ```
 
-## 15. Próximos pasos
+Todo se puede probar sin ninguna cuenta en la nube:
+
+- **Regístrate** en la app; la cuenta se crea en el emulador de Auth (usuarios y enlaces de verificación: <http://localhost:4000>).
+- **Los emails de invitación** llegan a Mailpit: <http://localhost:8025>.
+- Para verificar un email en local, abre su enlace de verificación desde la UI del emulador (Authentication → la cuenta) y pulsa «Ya lo he verificado» en la app.
+
+## 17. Próximos pasos
 
 | Elemento | Cuándo |
 |---|---|
-| Adaptador de autenticación + pantallas de inicio de sesión y registro | Hito M0 (PR 5) |
-| Alta del primer espacio de trabajo e interfaz de invitaciones | Hito M0 (PR 5) |
-| Componentes base de shadcn/ui, estructura de la aplicación y paleta de comandos | Con las primeras pantallas |
-| Formularios con react-hook-form + Zod y errores por campo desde Problem Details | Con los primeros formularios |
-| Playwright + axe en el CI | Con el primer flujo completo |
-| Invalidación en tiempo real con avisos de Firestore | Cuando el backend publique avisos |
+| Datos de ejemplo (`make db-seed`) y el CLA | Hito M0, siguiente PR |
+| Playwright + axe en el CI con el primer flujo completo | Hito M0, siguiente PR |
+| Proyectos, tareas, vistas de tablero y lista (+ dnd-kit, cmdk, overlays de Radix según haga falta) | Hito M1 |
+| Actualizaciones optimistas, paleta de comandos, atajos | Con el tablero |
+| Invalidación en tiempo real mediante señales de Firestore | Cuando el backend publique señales |

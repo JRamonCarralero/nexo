@@ -2,7 +2,7 @@
 
 [English](0007-styling-and-components.md) · **Español**
 
-- **Estado:** Aceptado (implementado en parte)
+- **Estado:** Aceptado (implementado en parte; primeros componentes escritos a mano, ver [ADR-0012](0012-ui-primitives-and-forms.es.md))
 - **Fecha:** 2026-10-22
 
 ## Contexto
