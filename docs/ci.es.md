@@ -56,6 +56,7 @@ flowchart LR
     changes -->|api/| contract[contract]
     changes -->|backend/ o api/| backend[backend]
     changes -->|frontend/ o api/| frontend[frontend]
+    changes -->|backend/, frontend/ o api/| e2e[e2e]
     changes --> security[security]
 ```
 
@@ -119,7 +120,20 @@ Se ejecuta si cambia `frontend/` o `api/`. Todos los pasos se ejecutan dentro de
 
 La versión de pnpm sale del campo `packageManager` de `frontend/package.json`.
 
-### 5. `security` — Seguridad
+### 5. `e2e` — Tests de extremo a extremo
+
+Se ejecuta si cambia `backend/`, `frontend/`, `api/`, `docker/`, `docker-compose.yml` o el `Makefile`. Ejercita todo el producto como lo haría una persona: la API real, la app web real, PostgreSQL y el emulador de Firebase Auth.
+
+| Paso | Qué hace |
+|---|---|
+| **Navegador de Playwright** | Instala Chromium con sus dependencias del sistema. |
+| **Servicios locales** | `make up`: PostgreSQL, emulador de Firebase Auth y Mailpit con Docker Compose. |
+| **`make e2e`** | Aplica las migraciones, carga los datos de ejemplo (`make db-seed`) y ejecuta [Playwright](https://playwright.dev/) (`frontend/e2e`). Playwright arranca por sí mismo la API y la app web. |
+| **Informe** | Si algo falla, el informe HTML, las capturas y las trazas se suben como artefacto `playwright-report` (7 días). |
+
+Los tests cubren el primer hito (registrarse, crear un espacio, invitar a alguien que se une) y los datos de ejemplo (vistas de administrador e invitado, credenciales incorrectas). Cada página que visitan se comprueba además con [axe](https://github.com/dequelabs/axe-core) contra **WCAG 2.1 A y AA**: una violación de accesibilidad rompe la build. Un test comprueba que la propia comprobación detecta violaciones. En local: `make e2e` (necesita `make up`).
+
+### 6. `security` — Seguridad
 
 Se ejecuta siempre.
 
@@ -178,7 +192,7 @@ Configuración recomendada en **Settings → Branches** (o **Rules → Rulesets*
 - **Require a pull request before merging** (exigir pull request para hacer merge).
   - Mientras haya un único colaborador: **0 aprobaciones obligatorias**. GitHub no permite que el autor de un pull request lo apruebe, así que exigir 1 bloquearía tus propios pull requests.
   - Cuando se unan más personas: 1 aprobación y un fichero `CODEOWNERS`, para que la revisión se pida automáticamente.
-- **Require status checks to pass** (exigir que pasen los checks): selecciona los jobs `Backend`, `Frontend`, `API contract` y `Security`. GitHub solo muestra los checks que se han ejecutado al menos una vez, así que se configura después del primer pull request.
+- **Require status checks to pass** (exigir que pasen los checks): selecciona los jobs `Backend`, `Frontend`, `API contract`, `End-to-end` y `Security`. GitHub solo muestra los checks que se han ejecutado al menos una vez, así que se configura después del primer pull request.
 - **Require branches to be up to date before merging** (opcional): obliga a volver a probar el pull request con el `main` más reciente.
 - **No permitir force push ni borrar la rama.**
 
@@ -188,6 +202,5 @@ El repositorio es público, así que **los minutos de GitHub Actions son ilimita
 
 ## Próximamente
 
-- **Tests de extremo a extremo (`e2e`):** se añadirán cuando exista el primer flujo real (iniciar sesión + crear una tarea). Levantarán el entorno completo con Docker Compose y los datos de prueba, y ejecutarán [Playwright](https://playwright.dev/) con comprobaciones de accesibilidad ([axe](https://github.com/dequelabs/axe-core)).
 - **Despliegue continuo (CD):** tras cada merge en `main`, construir la imagen, publicarla en Artifact Registry y desplegarla en Cloud Run. La autenticación con GCP será con **Workload Identity Federation**, sin claves JSON guardadas en GitHub.
 - **CLA:** un bot que pida a quien contribuya por primera vez que firme el acuerdo en su pull request.

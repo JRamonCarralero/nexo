@@ -42,7 +42,7 @@ Guiding principles (from the product vision):
 | Accessible overlays (dialogs, menus), drag and drop, command palette | Radix primitives, dnd-kit, cmdk | *planned* (when a screen needs them) |
 | i18n | i18next + react-i18next | ✅ |
 | Unit/component tests | Vitest + Testing Library (jsdom) | ✅ |
-| End-to-end / a11y | Playwright + axe | *planned* |
+| End-to-end / a11y | Playwright + axe | ✅ |
 | Lint / format | ESLint 10 (typescript-eslint), Prettier (+ Tailwind plugin) | ✅ |
 | Runtime / package manager | Node 24 LTS (`.nvmrc`), pnpm (pinned in `package.json`) | ✅ |
 
@@ -55,6 +55,8 @@ frontend/
 ├── orval.config.ts         API client generation (+ Prettier on the output)
 ├── tsr.config.json         Route tree generation (same settings as the Vite plugin)
 ├── eslint.config.js        Lint rules, including import boundaries
+├── playwright.config.ts    End-to-end tests: starts the API and the web app
+├── e2e/                    Playwright specs and helpers (axe accessibility checks)
 └── src/
     ├── main.tsx            The one place where the identity provider is created
     ├── app/
@@ -226,7 +228,7 @@ In development nothing needs configuring: everything defaults to the local emula
 |---|---|---|
 | Units and components | Vitest + Testing Library + jsdom | The HTTP client (token, retry), config, error mapping, `safeRedirect` |
 | Screens and flows | The same, with the **real router and guards** | Sign in/up, workspace creation, members, invitations, verification banner, language |
-| End-to-end and accessibility | Playwright + axe against Docker Compose with seed data | *planned* |
+| End-to-end and accessibility | Playwright + axe against the real API, PostgreSQL and the Auth emulator, with the seed data (`make e2e`) | ✅ |
 
 Helpers in `src/test`: **`createFakeAuth()`** (an `AuthService` that records every action), **`mockApi()`** (replaces `fetch` with a fake API keyed `"METHOD /path"`, and records unexpected requests), **fixtures** and **`renderApp({ path, auth })`**, which mounts the whole app on a memory history. Tests are written from the user's point of view (labels, roles, texts), not implementation details, and they run in Spanish.
 
@@ -240,6 +242,7 @@ Helpers in `src/test`: **`createFakeAuth()`** (an `AuthService` that records eve
 | `pnpm test` | Vitest |
 | `pnpm build` | Production bundle |
 | `pnpm generate` | API client + route tree (CI checks they are up to date) |
+| `pnpm e2e` / `make e2e` | End-to-end tests with Playwright + axe (needs `make up`; the Makefile target also migrates and seeds) |
 
 All of them run in CI on pull requests that touch `frontend/` or `api/`. Git hooks (lefthook) run ESLint and Prettier on staged files.
 
@@ -265,7 +268,7 @@ Everything can be tried without any cloud account:
 |---|---|
 | ✅ Seed data (`make db-seed`) | Done |
 | The CLA | Milestone M0, next PR |
-| Playwright + axe in CI with the first full flow | Milestone M0, next PR |
+| ✅ Playwright + axe in CI with the first full flow | Done |
 | Projects, tasks, board and list views (+ dnd-kit, cmdk, Radix overlays as needed) | Milestone M1 |
 | Optimistic updates, command palette, shortcuts | With the board |
 | Real-time invalidation via Firestore signals | When the backend publishes signals |

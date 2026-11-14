@@ -2,7 +2,7 @@
 
 [English](0009-testing-strategy.md) · **Español**
 
-- **Estado:** Aceptado (implementado en parte)
+- **Estado:** Aceptado (implementado en parte: hay tests unitarios, de componentes y end-to-end; MSW sigue previsto)
 - **Fecha:** 2026-10-22
 
 ## Contexto
@@ -12,7 +12,8 @@ Los tests deben comprobar el comportamiento que ve el usuario, ejecutarse rápid
 ## Decisión
 
 - **Vitest** + **Testing Library** (jsdom) para unidades y componentes, simulando `fetch`. *Implementado.*
-- **MSW** con mocks generados por orval para tests de componentes más completos, y **Playwright** + **axe** para los flujos de punta a punta y la accesibilidad en el CI cuando exista el primer flujo real (iniciar sesión + crear una tarea). *Previsto.*
+- **MSW** con mocks generados por orval para tests de componentes más completos. *Previsto.*
+- **Playwright** + **axe** para los flujos de punta a punta y la accesibilidad (WCAG 2.1 A/AA) contra la API real, PostgreSQL y el emulador de Auth, con los datos de ejemplo; se ejecutan en el CI como el job `e2e` y en local con `make e2e`. *Implementado.*
 
 ## Consecuencias
 

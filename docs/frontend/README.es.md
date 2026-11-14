@@ -42,7 +42,7 @@ Principios (de la visión del producto):
 | Overlays accesibles (diálogos, menús), arrastrar y soltar, paleta de comandos | Primitivas de Radix, dnd-kit, cmdk | *previsto* (cuando una pantalla lo necesite) |
 | i18n | i18next + react-i18next | ✅ |
 | Tests unitarios/de componentes | Vitest + Testing Library (jsdom) | ✅ |
-| End-to-end / accesibilidad | Playwright + axe | *previsto* |
+| End-to-end / accesibilidad | Playwright + axe | ✅ |
 | Lint / formato | ESLint 10 (typescript-eslint), Prettier (+ plugin de Tailwind) | ✅ |
 | Runtime / gestor de paquetes | Node 24 LTS (`.nvmrc`), pnpm (fijado en `package.json`) | ✅ |
 
@@ -55,6 +55,8 @@ frontend/
 ├── orval.config.ts         Generación del cliente de la API (+ Prettier sobre la salida)
 ├── tsr.config.json         Generación del árbol de rutas (mismos ajustes que el plugin de Vite)
 ├── eslint.config.js        Reglas de lint, incluidos los límites de importación
+├── playwright.config.ts    Tests end-to-end: arranca la API y la app web
+├── e2e/                    Specs y helpers de Playwright (comprobaciones de accesibilidad con axe)
 └── src/
     ├── main.tsx            El único sitio donde se crea el proveedor de identidad
     ├── app/
@@ -226,7 +228,7 @@ En desarrollo no hay que configurar nada: todo apunta por defecto al emulador lo
 |---|---|---|
 | Unidades y componentes | Vitest + Testing Library + jsdom | El cliente HTTP (token, reintento), la configuración, el mapeo de errores, `safeRedirect` |
 | Pantallas y flujos | Lo mismo, con el **router y los guards reales** | Inicio/alta, crear espacio, miembros, invitaciones, aviso de verificación, idioma |
-| End-to-end y accesibilidad | Playwright + axe contra Docker Compose con datos de ejemplo | *previsto* |
+| End-to-end y accesibilidad | Playwright + axe contra la API real, PostgreSQL y el emulador de Auth, con los datos de ejemplo (`make e2e`) | ✅ |
 
 Utilidades en `src/test`: **`createFakeAuth()`** (un `AuthService` que registra cada acción), **`mockApi()`** (sustituye `fetch` por una API falsa indexada por `"MÉTODO /ruta"` y registra las peticiones inesperadas), **fixtures** y **`renderApp({ path, auth })`**, que monta toda la app sobre un historial en memoria. Los tests se escriben desde el punto de vista de quien usa la app (etiquetas, roles, textos), no de los detalles de implementación, y se ejecutan en español.
 
@@ -240,6 +242,7 @@ Utilidades en `src/test`: **`createFakeAuth()`** (un `AuthService` que registra 
 | `pnpm test` | Vitest |
 | `pnpm build` | Bundle de producción |
 | `pnpm generate` | Cliente de la API + árbol de rutas (el CI comprueba que están al día) |
+| `pnpm e2e` / `make e2e` | Tests end-to-end con Playwright + axe (necesita `make up`; el objetivo del Makefile también migra y carga los datos) |
 
 Todos corren en el CI en los pull requests que tocan `frontend/` o `api/`. Los hooks de git (lefthook) ejecutan ESLint y Prettier sobre los ficheros en stage.
 
@@ -265,7 +268,7 @@ Todo se puede probar sin ninguna cuenta en la nube:
 |---|---|
 | ✅ Datos de ejemplo (`make db-seed`) | Hecho |
 | El CLA | Hito M0, siguiente PR |
-| Playwright + axe en el CI con el primer flujo completo | Hito M0, siguiente PR |
+| ✅ Playwright + axe en el CI con el primer flujo completo | Hecho |
 | Proyectos, tareas, vistas de tablero y lista (+ dnd-kit, cmdk, overlays de Radix según haga falta) | Hito M1 |
 | Actualizaciones optimistas, paleta de comandos, atajos | Con el tablero |
 | Invalidación en tiempo real mediante señales de Firestore | Cuando el backend publique señales |

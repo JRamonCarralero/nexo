@@ -26,6 +26,7 @@ jobs:
       api: ${{ steps.filter.outputs.api }}
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -43,6 +44,14 @@ jobs:
             frontend:
               - 'frontend/**'
               - 'api/**'
+              - '.github/workflows/ci.yml'
+            e2e:
+              - 'backend/**'
+              - 'frontend/**'
+              - 'api/**'
+              - 'docker/**'
+              - 'docker-compose.yml'
+              - 'Makefile'
               - '.github/workflows/ci.yml'
 
   contract:
@@ -132,6 +141,49 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  e2e:
+    name: End-to-end
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - name: Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Local services (PostgreSQL, Firebase Auth emulator, Mailpit)
+        run: |
+          cp .env.example backend/.env
+          make up
+      - name: Migrate, load the example data and run the tests
+        run: make e2e
+        env:
+          CI: 'true'
+      - name: Report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
 
   security:
     name: Security
