@@ -98,6 +98,10 @@ export const getListWorkspacesQueryOptions = <
 export type ListWorkspacesQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkspaces>>>
 export type ListWorkspacesQueryError = ErrorType<ProblemResponse>
 
+/**
+ * Todos los espacios a los que pertenece el usuario autenticado, ordenados por nombre, con su rol en cada uno.
+ * @summary Espacios de trabajo del usuario
+ */
 export function useListWorkspaces<
   TData = Awaited<ReturnType<typeof listWorkspaces>>,
   TError = ErrorType<ProblemResponse>,
@@ -116,6 +120,10 @@ export function useListWorkspaces<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Todos los espacios a los que pertenece el usuario autenticado, ordenados por nombre, con su rol en cada uno.
+ * @summary Espacios de trabajo del usuario
+ */
 export function useListWorkspaces<
   TData = Awaited<ReturnType<typeof listWorkspaces>>,
   TError = ErrorType<ProblemResponse>,
@@ -134,6 +142,10 @@ export function useListWorkspaces<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Todos los espacios a los que pertenece el usuario autenticado, ordenados por nombre, con su rol en cada uno.
+ * @summary Espacios de trabajo del usuario
+ */
 export function useListWorkspaces<
   TData = Awaited<ReturnType<typeof listWorkspaces>>,
   TError = ErrorType<ProblemResponse>,
@@ -145,9 +157,9 @@ export function useListWorkspaces<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Todos los espacios a los que pertenece el usuario autenticado, ordenados por nombre, con su rol en cada uno.
  * @summary Espacios de trabajo del usuario
  */
-
 export function useListWorkspaces<
   TData = Awaited<ReturnType<typeof listWorkspaces>>,
   TError = ErrorType<ProblemResponse>,
@@ -250,6 +262,7 @@ export type CreateWorkspaceMutationError = ErrorType<ProblemResponse>
 export type CreateWorkspaceMutationVariables = { data: WorkspaceInput }
 
 /**
+ * Quien lo crea pasa a ser su primer administrador.
  * @summary Crear un espacio de trabajo
  */
 export const useCreateWorkspace = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
@@ -322,6 +335,7 @@ export const getGetWorkspaceQueryOptions = <
 export type GetWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkspace>>>
 export type GetWorkspaceQueryError = ErrorType<ProblemResponse>
 
+/** @summary Un espacio de trabajo */
 export function useGetWorkspace<
   TData = Awaited<ReturnType<typeof getWorkspace>>,
   TError = ErrorType<ProblemResponse>,
@@ -341,6 +355,7 @@ export function useGetWorkspace<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Un espacio de trabajo */
 export function useGetWorkspace<
   TData = Awaited<ReturnType<typeof getWorkspace>>,
   TError = ErrorType<ProblemResponse>,
@@ -360,6 +375,7 @@ export function useGetWorkspace<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Un espacio de trabajo */
 export function useGetWorkspace<
   TData = Awaited<ReturnType<typeof getWorkspace>>,
   TError = ErrorType<ProblemResponse>,
@@ -371,10 +387,7 @@ export function useGetWorkspace<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Un espacio de trabajo
- */
-
+/** @summary Un espacio de trabajo */
 export function useGetWorkspace<
   TData = Awaited<ReturnType<typeof getWorkspace>>,
   TError = ErrorType<ProblemResponse>,
@@ -479,6 +492,7 @@ export type UpdateWorkspaceMutationError = ErrorType<ProblemResponse>
 export type UpdateWorkspaceMutationVariables = { workspaceId: string; data: WorkspaceInput }
 
 /**
+ * Solo administradores.
  * @summary Renombrar un espacio de trabajo
  */
 export const useUpdateWorkspace = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
@@ -551,6 +565,7 @@ export const getListMembersQueryOptions = <
 export type ListMembersQueryResult = NonNullable<Awaited<ReturnType<typeof listMembers>>>
 export type ListMembersQueryError = ErrorType<ProblemResponse>
 
+/** @summary Miembros de un espacio de trabajo */
 export function useListMembers<
   TData = Awaited<ReturnType<typeof listMembers>>,
   TError = ErrorType<ProblemResponse>,
@@ -570,6 +585,7 @@ export function useListMembers<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Miembros de un espacio de trabajo */
 export function useListMembers<
   TData = Awaited<ReturnType<typeof listMembers>>,
   TError = ErrorType<ProblemResponse>,
@@ -589,6 +605,7 @@ export function useListMembers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Miembros de un espacio de trabajo */
 export function useListMembers<
   TData = Awaited<ReturnType<typeof listMembers>>,
   TError = ErrorType<ProblemResponse>,
@@ -600,10 +617,7 @@ export function useListMembers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Miembros de un espacio de trabajo
- */
-
+/** @summary Miembros de un espacio de trabajo */
 export function useListMembers<
   TData = Awaited<ReturnType<typeof listMembers>>,
   TError = ErrorType<ProblemResponse>,
@@ -713,6 +727,7 @@ export type UpdateMemberMutationVariables = {
 }
 
 /**
+ * Solo administradores. Un espacio siempre conserva al menos un administrador.
  * @summary Cambiar el rol de un miembro
  */
 export const useUpdateMember = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
@@ -797,6 +812,7 @@ export type RemoveMemberMutationError = ErrorType<ProblemResponse>
 export type RemoveMemberMutationVariables = { workspaceId: string; userId: string }
 
 /**
+ * Los administradores pueden quitar a cualquiera; cualquier miembro puede quitarse a sí mismo. Un espacio siempre conserva al menos un administrador.
  * @summary Quitar un miembro o abandonar el espacio
  */
 export const useRemoveMember = <TError = ErrorType<ProblemResponse>, TContext = unknown>(

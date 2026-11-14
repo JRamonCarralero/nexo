@@ -84,6 +84,7 @@ export const getGetHealthQueryOptions = <
 export type GetHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHealth>>>
 export type GetHealthQueryError = ErrorType<ProblemResponse>
 
+/** @summary Estado del servicio y de sus dependencias */
 export function useGetHealth<
   TData = Awaited<ReturnType<typeof getHealth>>,
   TError = ErrorType<ProblemResponse>,
@@ -102,6 +103,7 @@ export function useGetHealth<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Estado del servicio y de sus dependencias */
 export function useGetHealth<
   TData = Awaited<ReturnType<typeof getHealth>>,
   TError = ErrorType<ProblemResponse>,
@@ -120,6 +122,7 @@ export function useGetHealth<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Estado del servicio y de sus dependencias */
 export function useGetHealth<
   TData = Awaited<ReturnType<typeof getHealth>>,
   TError = ErrorType<ProblemResponse>,
@@ -130,10 +133,7 @@ export function useGetHealth<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Estado del servicio y de sus dependencias
- */
-
+/** @summary Estado del servicio y de sus dependencias */
 export function useGetHealth<
   TData = Awaited<ReturnType<typeof getHealth>>,
   TError = ErrorType<ProblemResponse>,
