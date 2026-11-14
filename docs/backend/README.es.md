@@ -316,7 +316,7 @@ make lint
 | Invitaciones (email y enlace), Mailer + Mailpit | ✅ Hecho | [0024](adr/0024-invitations.es.md), [0025](adr/0025-email-over-smtp.es.md) |
 | Pantallas del frontend | ✅ Hecho | — |
 | Datos de ejemplo (`make db-seed`) | ✅ Hecho | [0026](adr/0026-dev-seed-data.es.md) |
-| CLA, tests end-to-end | Siguiente (hito M0) | — |
+| CLA y tests end-to-end | ✅ Hecho | — |
 | Comandos, eventos y outbox transaccional | Previsto | [0015](adr/0015-commands-and-outbox.es.md) |
 | sqlc para las consultas a medida | Previsto | [0005](adr/0005-data-access-store.es.md) |
 | Modelos de lectura en `internal/query` | Previsto | [0002](adr/0002-modular-monolith.es.md) |

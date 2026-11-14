@@ -151,6 +151,16 @@ Always runs.
 - Results appear in the repository's **Security → Code scanning** tab.
 - It is free because the repository is public.
 
+## CLA
+
+The workflow [`cla.yml`](../.github/workflows/cla.yml) asks every contributor to sign the [Contributor License Agreement](../CLA.md) in their first pull request, using [CLA Assistant Lite](https://github.com/contributor-assistant/github-action).
+
+- The bot comments on the pull request; the contributor signs once by replying with the phrase it shows. The check is called **CLA** and stays red until everyone who authored commits in the pull request has signed.
+- Signatures are stored in `signatures/cla.json` in the **`cla-signatures`** branch, so `main` stays protected. That branch must exist (it is created once by hand, with an empty `{"signedContributors": []}` file).
+- `dependabot[bot]` and `github-actions[bot]` do not need to sign. Add the maintainers' usernames to `allowlist` if you do not want them to sign.
+- It runs on `pull_request_target`, which has write permissions even for pull requests from forks. That is safe **only because the job never checks out or runs the pull request's code**. Do not add such a step.
+- To make it mandatory, select the **CLA** check in the `main` ruleset (see [Protecting the `main` branch](#protecting-the-main-branch)).
+
 ## Dependabot
 
 [`dependabot.yml`](../.github/dependabot.yml) opens pull requests to update dependencies. Each one goes through the full CI like any other change.
@@ -203,4 +213,3 @@ The repository is public, so **GitHub Actions minutes are unlimited**. If it eve
 ## Coming next
 
 - **Continuous deployment (CD):** after each merge to `main`, build the image, publish it to Artifact Registry and deploy it to Cloud Run. Authentication with GCP will use **Workload Identity Federation**, with no JSON keys stored in GitHub.
-- **CLA:** a bot that asks external contributors to sign the agreement in their first pull request.

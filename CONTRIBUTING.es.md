@@ -8,7 +8,7 @@
 
 Para poder aceptar contribuciones externas, cada colaborador debe firmar un **acuerdo de licencia de contribución (CLA)**. Se firma una sola vez, con un clic, desde el propio pull request. El CLA permite al proyecto mantener la licencia AGPL-3.0 y, si fuera necesario, ofrecer otras licencias en el futuro.
 
-> El texto del CLA y el bot que lo gestiona se publicarán antes de aceptar la primera contribución externa.
+Lee el [CLA](CLA.es.md) ([in English](CLA.md)). Un bot comenta en tu primer pull request: firma respondiendo con la frase que te pide. Tu firma queda registrada en la rama `cla-signatures` y cubre todas tus contribuciones. Conservas los derechos de autor de tu trabajo. El job del CI se describe en [docs/ci.es.md](docs/ci.es.md#cla).
 
 ## Flujo de trabajo
 

@@ -1,0 +1,47 @@
+name: CLA
+
+# Asks contributors to sign the Contributor License Agreement (CLA.md) in their
+# first pull request and records the signature. See docs/ci.md.
+#
+# It uses pull_request_target so it can comment on pull requests from forks.
+# That is safe here because the job NEVER checks out or runs the pull request's
+# code: it only reads who the authors are and writes comments and signatures.
+# Keep it that way: do not add a checkout of the PR head to this workflow.
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    name: CLA
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        if: >-
+          github.event_name == 'pull_request_target' ||
+          github.event.comment.body == 'recheck' ||
+          github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA'
+        uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-document: "https://github.com/JRamonCarralero/nexo/blob/main/CLA.md"
+          path-to-signatures: "signatures/cla.json"
+          # Signatures live in their own branch, so main stays protected.
+          branch: "cla-signatures"
+          allowlist: "dependabot[bot],github-actions[bot]"
+          custom-notsigned-prcomment: >-
+            Thanks for your contribution! Before we can merge it, please read the
+            [Contributor License Agreement](https://github.com/JRamonCarralero/nexo/blob/main/CLA.md)
+            ([en español](https://github.com/JRamonCarralero/nexo/blob/main/CLA.es.md))
+            and sign it once by commenting the phrase below. /
+            ¡Gracias por tu contribución! Antes de poder fusionarla, lee el acuerdo de licencia
+            de contribución (enlaces arriba) y fírmalo una sola vez comentando la frase de abajo.
