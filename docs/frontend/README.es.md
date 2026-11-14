@@ -267,7 +267,7 @@ Todo se puede probar sin ninguna cuenta en la nube:
 | Elemento | Cuándo |
 |---|---|
 | ✅ Datos de ejemplo (`make db-seed`) | Hecho |
-| El CLA | Hito M0, siguiente PR |
+| ✅ El CLA | Hecho |
 | ✅ Playwright + axe en el CI con el primer flujo completo | Hecho |
 | Proyectos, tareas, vistas de tablero y lista (+ dnd-kit, cmdk, overlays de Radix según haga falta) | Hito M1 |
 | Actualizaciones optimistas, paleta de comandos, atajos | Con el tablero |
