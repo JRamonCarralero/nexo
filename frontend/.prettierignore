@@ -1,3 +1,5 @@
 dist
 pnpm-lock.yaml
 src/app/routeTree.gen.ts
+playwright-report
+test-results

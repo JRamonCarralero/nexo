@@ -45,6 +45,11 @@ down: ## Stop local services (data is kept)
 dev-api: ## Run the API (http://localhost:8080)
 	cd $(BACKEND) && go run -ldflags "-X main.version=$(VERSION)" ./cmd/api
 
+.PHONY: e2e
+e2e: ## Run the end-to-end tests (Playwright + axe); needs `make up`, loads the example data
+	@$(MAKE) --no-print-directory db-migrate db-seed
+	cd $(FRONTEND) && pnpm e2e
+
 .PHONY: dev-web
 dev-web: ## Run the frontend (http://localhost:5173)
 	cd $(FRONTEND) && pnpm dev

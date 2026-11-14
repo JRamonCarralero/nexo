@@ -14,6 +14,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "generate": "orval --config orval.config.ts && tsr generate"
   },
   "dependencies": {
@@ -32,7 +34,9 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.4",
     "@tanstack/react-query-devtools": "^5.105.3",
     "@tanstack/react-router-devtools": "^1.167.2",
