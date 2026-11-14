@@ -283,6 +283,7 @@ Read from environment variables; a `.env` file is loaded in local development ([
 ## 16. Database migrations
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, run as the table **owner** (`DB_URL` in the Makefile).
+- `make db-seed` loads example data (people, workspaces, roles, a pending invitation) through the real services; `db-reset` runs it after migrating. Development only, emulator only, safe to repeat: [ADR-0026](adr/0026-dev-seed-data.md).
 - Current migrations: `00001` extensions, `00002` `nexo_app` role + RLS helper functions, `00003` users + provisioning functions, `00004` RLS without `FORCE`, `00005` workspaces and memberships, `00006` invitations.
 - New tenant tables follow the template in [data-access.md](data-access.md#adding-a-tenant-table) (RLS, policy, indexes).
 
@@ -313,7 +314,9 @@ make lint
 |---|---|---|
 | Workspaces, memberships and the workspace middleware | ✅ Done | [0017](adr/0017-workspace-in-url-path.md), [0023](adr/0023-workspaces-and-roles.md) |
 | Invitations (email and link), Mailer + Mailpit | ✅ Done | [0024](adr/0024-invitations.md), [0025](adr/0025-email-over-smtp.md) |
-| Frontend screens, seed data and CLA | Next (milestone M0) | — |
+| Frontend screens | ✅ Done | — |
+| Seed data (`make db-seed`) | ✅ Done | [0026](adr/0026-dev-seed-data.md) |
+| CLA, end-to-end tests | Next (milestone M0) | — |
 | Commands, events and transactional outbox | Planned | [0015](adr/0015-commands-and-outbox.md) |
 | sqlc for custom queries | Planned | [0005](adr/0005-data-access-store.md) |
 | `internal/query` read models | Planned | [0002](adr/0002-modular-monolith.md) |

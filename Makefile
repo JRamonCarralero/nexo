@@ -68,10 +68,15 @@ db-new: ## Create a migration: make db-new name=create_tasks
 	@test -n "$(name)" || (echo "usage: make db-new name=<name>" && exit 1)
 	$(GOOSE) create $(name) sql
 
+.PHONY: db-seed
+db-seed: ## Load example data (local only; needs `make up`; safe to repeat)
+	cd $(BACKEND) && go run ./cmd/seed
+
 .PHONY: db-reset
-db-reset: ## Drop everything and migrate again (seed will be added here)
+db-reset: ## Drop everything, migrate again and load the example data
 	$(GOOSE) reset
 	$(GOOSE) up
+	@$(MAKE) --no-print-directory db-seed
 
 ## ---------- Code generation ----------
 
