@@ -8,7 +8,7 @@ Thanks for your interest! Nexo is at a very early stage; before spending time on
 
 To accept external contributions, every contributor must sign a **Contributor License Agreement (CLA)**. You sign it once, with a single click, from the pull request itself. The CLA lets the project keep the AGPL-3.0 license and, if ever needed, offer other licenses in the future.
 
-> The CLA text and the bot that manages it will be published before the first external contribution is accepted.
+Read the [CLA](CLA.md) ([en español](CLA.es.md)). A bot comments on your first pull request: sign by replying with the phrase it asks for. Your signature is recorded in the `cla-signatures` branch and covers all your contributions. You keep the copyright of your work. The CI job is described in [docs/ci.md](docs/ci.md#cla).
 
 ## Workflow
 

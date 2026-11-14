@@ -267,7 +267,7 @@ Everything can be tried without any cloud account:
 | Item | When |
 |---|---|
 | ✅ Seed data (`make db-seed`) | Done |
-| The CLA | Milestone M0, next PR |
+| ✅ The CLA | Done |
 | ✅ Playwright + axe in CI with the first full flow | Done |
 | Projects, tasks, board and list views (+ dnd-kit, cmdk, Radix overlays as needed) | Milestone M1 |
 | Optimistic updates, command palette, shortcuts | With the board |
