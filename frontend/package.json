@@ -24,7 +24,7 @@
     "@tanstack/react-router": "^1.170.46",
     "clsx": "^2.1.1",
     "firebase": "^13.2.0",
-    "i18next": "^26.7.1",
+    "i18next": "^27.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
