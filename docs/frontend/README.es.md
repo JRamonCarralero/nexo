@@ -248,6 +248,7 @@ Todos corren en el CI en los pull requests que tocan `frontend/` o `api/`. Los h
 ```bash
 nvm use            # Node 24 de .nvmrc
 make up            # PostgreSQL, emulador de Firebase Auth, Mailpit
+make db-seed       # cuentas y espacios de ejemplo (ana@nexo.local, contraseña nexo1234)
 make dev-api       # API en :8080
 make dev-web       # web en http://localhost:5173
 ```
@@ -262,7 +263,8 @@ Todo se puede probar sin ninguna cuenta en la nube:
 
 | Elemento | Cuándo |
 |---|---|
-| Datos de ejemplo (`make db-seed`) y el CLA | Hito M0, siguiente PR |
+| ✅ Datos de ejemplo (`make db-seed`) | Hecho |
+| El CLA | Hito M0, siguiente PR |
 | Playwright + axe en el CI con el primer flujo completo | Hito M0, siguiente PR |
 | Proyectos, tareas, vistas de tablero y lista (+ dnd-kit, cmdk, overlays de Radix según haga falta) | Hito M1 |
 | Actualizaciones optimistas, paleta de comandos, atajos | Con el tablero |

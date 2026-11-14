@@ -248,6 +248,7 @@ All of them run in CI on pull requests that touch `frontend/` or `api/`. Git hoo
 ```bash
 nvm use            # Node 24 from .nvmrc
 make up            # PostgreSQL, Firebase Auth emulator, Mailpit
+make db-seed       # example accounts and workspaces (ana@nexo.local, password nexo1234)
 make dev-api       # API on :8080
 make dev-web       # web on http://localhost:5173
 ```
@@ -262,7 +263,8 @@ Everything can be tried without any cloud account:
 
 | Item | When |
 |---|---|
-| Seed data (`make db-seed`) and the CLA | Milestone M0, next PR |
+| ✅ Seed data (`make db-seed`) | Done |
+| The CLA | Milestone M0, next PR |
 | Playwright + axe in CI with the first full flow | Milestone M0, next PR |
 | Projects, tasks, board and list views (+ dnd-kit, cmdk, Radix overlays as needed) | Milestone M1 |
 | Optimistic updates, command palette, shortcuts | With the board |

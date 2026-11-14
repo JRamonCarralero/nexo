@@ -42,6 +42,7 @@ Requirements: Go 1.27+, Node 24.15+ (see `.nvmrc`), pnpm 10, Docker and `make`.
 make setup      # dependencies, tools and git hooks; creates backend/.env
 make up         # Postgres (port 5433), Firebase Auth emulator (UI at http://localhost:4000), Mailpit (emails at http://localhost:8025)
 make db-migrate # applies the migrations
+make db-seed    # example data: ana/luis/marta@nexo.local, password nexo1234 (local only)
 make dev-api    # API at http://localhost:8080
 make dev-web    # web at http://localhost:5173 (in another terminal)
 ```

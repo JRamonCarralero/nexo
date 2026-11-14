@@ -283,6 +283,7 @@ Se lee de variables de entorno; en desarrollo local se carga un fichero `.env` (
 ## 16. Migraciones de la base de datos
 
 - `make db-migrate` / `db-rollback` / `db-status` / `db-new name=…` / `db-reset`, ejecutadas con el **dueño** de las tablas (`DB_URL` en el Makefile).
+- `make db-seed` carga datos de ejemplo (personas, espacios, roles, una invitación pendiente) a través de los servicios reales; `db-reset` lo ejecuta tras migrar. Solo desarrollo, solo emulador, se puede repetir: [ADR-0026](adr/0026-dev-seed-data.es.md).
 - Migraciones actuales: `00001` extensiones, `00002` rol `nexo_app` + funciones auxiliares de la RLS, `00003` usuarios + funciones de alta, `00004` RLS sin `FORCE`, `00005` espacios de trabajo y membresías, `00006` invitaciones.
 - Las tablas nuevas de espacio de trabajo siguen la plantilla de [data-access.es.md](data-access.es.md#añadir-una-tabla-de-espacio-de-trabajo) (RLS, política, índices).
 
@@ -313,7 +314,9 @@ make lint
 |---|---|---|
 | Espacios de trabajo, membresías y middleware de espacio | ✅ Hecho | [0017](adr/0017-workspace-in-url-path.es.md), [0023](adr/0023-workspaces-and-roles.es.md) |
 | Invitaciones (email y enlace), Mailer + Mailpit | ✅ Hecho | [0024](adr/0024-invitations.es.md), [0025](adr/0025-email-over-smtp.es.md) |
-| Pantallas del frontend, datos de prueba y CLA | Siguiente (hito M0) | — |
+| Pantallas del frontend | ✅ Hecho | — |
+| Datos de ejemplo (`make db-seed`) | ✅ Hecho | [0026](adr/0026-dev-seed-data.es.md) |
+| CLA, tests end-to-end | Siguiente (hito M0) | — |
 | Comandos, eventos y outbox transaccional | Previsto | [0015](adr/0015-commands-and-outbox.es.md) |
 | sqlc para las consultas a medida | Previsto | [0005](adr/0005-data-access-store.es.md) |
 | Modelos de lectura en `internal/query` | Previsto | [0002](adr/0002-modular-monolith.es.md) |

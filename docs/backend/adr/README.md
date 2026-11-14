@@ -31,6 +31,7 @@ An ADR records one significant decision: the context, what was decided, why, and
 | [0023](0023-workspaces-and-roles.md) | Workspaces, memberships and roles | Accepted | 2026-10-28 |
 | [0024](0024-invitations.md) | Invitations by email and by link | Accepted | 2026-11-07 |
 | [0025](0025-email-over-smtp.md) | Email over SMTP behind a Mailer interface | Accepted | 2026-11-07 |
+| [0026](0026-dev-seed-data.md) | Example data for local development, created through the services | Accepted |
 
 ## Writing a new ADR
 

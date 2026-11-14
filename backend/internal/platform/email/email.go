@@ -18,3 +18,9 @@ type Message struct {
 type Mailer interface {
 	Send(ctx context.Context, msg Message) error
 }
+
+// Discard is a Mailer that drops every message. For local seed data, where
+// nobody is waiting for the emails.
+type Discard struct{}
+
+func (Discard) Send(context.Context, Message) error { return nil }
