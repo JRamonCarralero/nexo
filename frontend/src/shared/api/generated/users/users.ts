@@ -86,6 +86,11 @@ export const getGetMeQueryOptions = <
 export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
 export type GetMeQueryError = ErrorType<ProblemResponse>
 
+/**
+ * Devuelve el perfil del usuario que hace la petición. La primera petición
+ * autenticada de una cuenta crea su usuario en Nexo.
+ * @summary Usuario autenticado
+ */
 export function useGetMe<
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<ProblemResponse>,
@@ -104,6 +109,11 @@ export function useGetMe<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Devuelve el perfil del usuario que hace la petición. La primera petición
+ * autenticada de una cuenta crea su usuario en Nexo.
+ * @summary Usuario autenticado
+ */
 export function useGetMe<
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<ProblemResponse>,
@@ -122,6 +132,11 @@ export function useGetMe<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Devuelve el perfil del usuario que hace la petición. La primera petición
+ * autenticada de una cuenta crea su usuario en Nexo.
+ * @summary Usuario autenticado
+ */
 export function useGetMe<
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<ProblemResponse>,
@@ -133,9 +148,10 @@ export function useGetMe<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Devuelve el perfil del usuario que hace la petición. La primera petición
+ * autenticada de una cuenta crea su usuario en Nexo.
  * @summary Usuario autenticado
  */
-
 export function useGetMe<
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<ProblemResponse>,

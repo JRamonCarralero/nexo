@@ -104,6 +104,10 @@ export const getListInvitationsQueryOptions = <
 export type ListInvitationsQueryResult = NonNullable<Awaited<ReturnType<typeof listInvitations>>>
 export type ListInvitationsQueryError = ErrorType<ProblemResponse>
 
+/**
+ * Invitaciones por email sin aceptar y enlaces activos, sin caducar ni revocar. Solo administradores.
+ * @summary Invitaciones pendientes
+ */
 export function useListInvitations<
   TData = Awaited<ReturnType<typeof listInvitations>>,
   TError = ErrorType<ProblemResponse>,
@@ -123,6 +127,10 @@ export function useListInvitations<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Invitaciones por email sin aceptar y enlaces activos, sin caducar ni revocar. Solo administradores.
+ * @summary Invitaciones pendientes
+ */
 export function useListInvitations<
   TData = Awaited<ReturnType<typeof listInvitations>>,
   TError = ErrorType<ProblemResponse>,
@@ -142,6 +150,10 @@ export function useListInvitations<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Invitaciones por email sin aceptar y enlaces activos, sin caducar ni revocar. Solo administradores.
+ * @summary Invitaciones pendientes
+ */
 export function useListInvitations<
   TData = Awaited<ReturnType<typeof listInvitations>>,
   TError = ErrorType<ProblemResponse>,
@@ -154,9 +166,9 @@ export function useListInvitations<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Invitaciones por email sin aceptar y enlaces activos, sin caducar ni revocar. Solo administradores.
  * @summary Invitaciones pendientes
  */
-
 export function useListInvitations<
   TData = Awaited<ReturnType<typeof listInvitations>>,
   TError = ErrorType<ProblemResponse>,
@@ -265,6 +277,9 @@ export type CreateInvitationMutationError = ErrorType<ProblemResponse>
 export type CreateInvitationMutationVariables = { workspaceId: string; data: InvitationInput }
 
 /**
+ * Solo administradores.
+ * - `email`: envía un correo con el enlace de un solo uso (caduca en 7 días). Volver a invitar al mismo email revoca la invitación anterior.
+ * - `link`: devuelve un enlace reutilizable (caduca en 30 días) que **solo se muestra esta vez**. No puede dar el rol `admin`.
  * @summary Invitar a alguien
  */
 export const useCreateInvitation = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
@@ -351,6 +366,7 @@ export type RevokeInvitationMutationError = ErrorType<ProblemResponse>
 export type RevokeInvitationMutationVariables = { workspaceId: string; invitationId: string }
 
 /**
+ * Solo administradores. La invitación deja de poder aceptarse.
  * @summary Revocar una invitación
  */
 export const useRevokeInvitation = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
@@ -424,6 +440,10 @@ export const getGetInvitationQueryOptions = <
 export type GetInvitationQueryResult = NonNullable<Awaited<ReturnType<typeof getInvitation>>>
 export type GetInvitationQueryError = ErrorType<ProblemResponse>
 
+/**
+ * A qué espacio y con qué rol invita el enlace, para la pantalla de confirmación.
+ * @summary Ver una invitación
+ */
 export function useGetInvitation<
   TData = Awaited<ReturnType<typeof getInvitation>>,
   TError = ErrorType<ProblemResponse>,
@@ -443,6 +463,10 @@ export function useGetInvitation<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * A qué espacio y con qué rol invita el enlace, para la pantalla de confirmación.
+ * @summary Ver una invitación
+ */
 export function useGetInvitation<
   TData = Awaited<ReturnType<typeof getInvitation>>,
   TError = ErrorType<ProblemResponse>,
@@ -462,6 +486,10 @@ export function useGetInvitation<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * A qué espacio y con qué rol invita el enlace, para la pantalla de confirmación.
+ * @summary Ver una invitación
+ */
 export function useGetInvitation<
   TData = Awaited<ReturnType<typeof getInvitation>>,
   TError = ErrorType<ProblemResponse>,
@@ -474,9 +502,9 @@ export function useGetInvitation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * A qué espacio y con qué rol invita el enlace, para la pantalla de confirmación.
  * @summary Ver una invitación
  */
-
 export function useGetInvitation<
   TData = Awaited<ReturnType<typeof getInvitation>>,
   TError = ErrorType<ProblemResponse>,
@@ -563,6 +591,9 @@ export type AcceptInvitationMutationError = ErrorType<ProblemResponse>
 export type AcceptInvitationMutationVariables = { token: string }
 
 /**
+ * Une al usuario autenticado al espacio de trabajo. Las invitaciones por email
+ * exigen que el email de la cuenta coincida y esté verificado. Si el usuario ya
+ * es miembro, conserva su rol.
  * @summary Aceptar una invitación
  */
 export const useAcceptInvitation = <TError = ErrorType<ProblemResponse>, TContext = unknown>(
